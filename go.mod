@@ -7,7 +7,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/xrpscan/xrpl-go v0.2.4
 	gitlab.com/ryancollingham/flare-common v0.0.0-20240730151714-1170f15b9186
-	gitlab.com/ryancollingham/flare-indexer-framework v0.0.0-20240805095436-9744142d698c
+	gitlab.com/ryancollingham/flare-indexer-framework v0.0.0-20240807104136-beb52db79001
 )
 
 require (

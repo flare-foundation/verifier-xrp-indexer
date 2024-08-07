@@ -19,6 +19,10 @@ type Client struct {
 }
 
 func New(cfg *Config) indexer.BlockchainClient {
+	if cfg.WebsocketURL == "" {
+		panic("websocket URL not set")
+	}
+
 	client := xrpl.NewClient(xrpl.ClientConfig{URL: cfg.WebsocketURL})
 
 	return Client{xrp: client}
@@ -69,10 +73,10 @@ func (c Client) GetLatestBlockNumber(context.Context) (uint64, error) {
 	return result.LedgerIndex, nil
 }
 
-func (c Client) GetBlockResult(context.Context, uint64) (*indexer.BlockResult, error) {
+func (c Client) GetBlockResult(ctx context.Context, blockNum uint64) (*indexer.BlockResult, error) {
 	rsp, err := c.xrp.Request(xrpl.BaseRequest{
 		"command":      "ledger",
-		"ledger_index": "validated",
+		"ledger_index": blockNum,
 		"transactions": true,
 		"expand":       false,
 		"owner_funds":  false,
