@@ -18,14 +18,14 @@ type Client struct {
 	xrp *xrpl.Client
 }
 
-func New(cfg *Config) indexer.BlockchainClient {
+func New(cfg *Config) (indexer.BlockchainClient, error) {
 	if cfg.WebsocketURL == "" {
-		panic("websocket URL not set")
+		return nil, errors.New("websocket_url must be provided")
 	}
 
 	client := xrpl.NewClient(xrpl.ClientConfig{URL: cfg.WebsocketURL})
 
-	return Client{xrp: client}
+	return Client{xrp: client}, nil
 }
 
 type xrpResponse struct {
