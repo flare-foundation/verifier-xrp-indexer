@@ -6,7 +6,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"github.com/xrpscan/xrpl-go"
-	"gitlab.com/ryancollingham/flare-indexer-framework/pkg/database"
 	"gitlab.com/ryancollingham/flare-indexer-framework/pkg/indexer"
 )
 
@@ -99,15 +98,15 @@ func (c Client) GetBlockResult(ctx context.Context, blockNum uint64) (*indexer.B
 		return nil, errors.Wrap(err, "mapstructure.Decode(result)")
 	}
 
-	block := database.Block{
+	block := Block{
 		Hash:      result.LedgerHash,
 		Number:    result.LedgerIndex,
 		Timestamp: result.Ledger.CloseTime,
 	}
 
-	transactions := make([]database.Transaction, len(result.Ledger.Transactions))
+	transactions := make([]interface{}, len(result.Ledger.Transactions))
 	for i := range transactions {
-		transactions[i] = database.Transaction{
+		transactions[i] = Transaction{
 			Hash:      result.Ledger.Transactions[i],
 			BlockHash: result.LedgerHash,
 		}

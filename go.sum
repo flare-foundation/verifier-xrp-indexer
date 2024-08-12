@@ -50,6 +50,8 @@ gitlab.com/ryancollingham/flare-common v0.0.0-20240730151714-1170f15b9186 h1:Wtf
 gitlab.com/ryancollingham/flare-common v0.0.0-20240730151714-1170f15b9186/go.mod h1:Zwd8QxQqL8pg8Y4yD/Cu4RxYq2PTi+rs1zIOTquaiTU=
 gitlab.com/ryancollingham/flare-indexer-framework v0.0.0-20240807211903-aba7e91c8f23 h1:2E2f3KL5qdOa3iU6iPj/SAUK190yqIxRGDh2PqPNG6I=
 gitlab.com/ryancollingham/flare-indexer-framework v0.0.0-20240807211903-aba7e91c8f23/go.mod h1:zBAVpw7+QbVJEoFXuZuqVitc8MerHgB5WcI3lu7+NMs=
+gitlab.com/ryancollingham/flare-indexer-framework v0.0.0-20240812140614-a94e8dd507de h1:QsygoSujokyRrlpyGbanERmD2xtISQJY1sU3X6f6OHA=
+gitlab.com/ryancollingham/flare-indexer-framework v0.0.0-20240812140614-a94e8dd507de/go.mod h1:zBAVpw7+QbVJEoFXuZuqVitc8MerHgB5WcI3lu7+NMs=
 go.uber.org/goleak v1.3.0 h1:2K3zAYmnTNqV73imy9J1T3WC+gmCePx2hEGkimedGto=
 go.uber.org/goleak v1.3.0/go.mod h1:CoHD4mav9JJNrW/WLlf7HGZPjdw8EucARQHekz1X6bE=
 go.uber.org/multierr v1.11.0 h1:blXXJkSxSSfBVBlC76pxqeO+LN3aDfLQo+309xJstO0=
