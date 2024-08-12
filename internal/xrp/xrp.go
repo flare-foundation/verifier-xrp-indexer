@@ -39,7 +39,7 @@ type ledgerResult struct {
 }
 
 type ledgerInfo struct {
-	CloseTime    uint64
+	CloseTime    uint64 `mapstructure:"close_time"`
 	Transactions []string
 }
 

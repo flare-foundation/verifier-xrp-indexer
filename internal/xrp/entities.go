@@ -8,7 +8,6 @@ type Block struct {
 
 type Transaction struct {
 	Hash      string `gorm:"primaryKey;type:varchar(64)"`
-	Timestamp uint64 `gorm:"index"`
 	BlockHash string `gorm:"type:varchar(64)"`
 	Block     *Block
 }
