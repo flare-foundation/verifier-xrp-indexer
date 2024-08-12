@@ -17,7 +17,7 @@ type Client struct {
 	xrp *xrpl.Client
 }
 
-func New(cfg *Config) (indexer.BlockchainClient, error) {
+func New(cfg *Config) (indexer.BlockchainClient[Block, Transaction], error) {
 	if cfg.WebsocketURL == "" {
 		return nil, errors.New("websocket_url must be provided")
 	}
@@ -72,7 +72,9 @@ func (c Client) GetLatestBlockNumber(context.Context) (uint64, error) {
 	return result.LedgerIndex, nil
 }
 
-func (c Client) GetBlockResult(ctx context.Context, blockNum uint64) (*indexer.BlockResult, error) {
+func (c Client) GetBlockResult(
+	ctx context.Context, blockNum uint64,
+) (*indexer.BlockResult[Block, Transaction], error) {
 	rsp, err := c.xrp.Request(xrpl.BaseRequest{
 		"command":      "ledger",
 		"ledger_index": blockNum,
@@ -104,7 +106,7 @@ func (c Client) GetBlockResult(ctx context.Context, blockNum uint64) (*indexer.B
 		Timestamp: result.Ledger.CloseTime,
 	}
 
-	transactions := make([]interface{}, len(result.Ledger.Transactions))
+	transactions := make([]Transaction, len(result.Ledger.Transactions))
 	for i := range transactions {
 		transactions[i] = Transaction{
 			Hash:      result.Ledger.Transactions[i],
@@ -112,5 +114,5 @@ func (c Client) GetBlockResult(ctx context.Context, blockNum uint64) (*indexer.B
 		}
 	}
 
-	return &indexer.BlockResult{Block: &block, Transactions: transactions}, nil
+	return &indexer.BlockResult[Block, Transaction]{Block: block, Transactions: transactions}, nil
 }
