@@ -2,6 +2,7 @@ package xrp
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
@@ -40,7 +41,12 @@ type ledgerResult struct {
 
 type ledgerInfo struct {
 	CloseTime    uint64 `mapstructure:"close_time"`
-	Transactions []string
+	Transactions []transactionInfo
+}
+
+type transactionInfo struct {
+	Hash  string                   `mapstructure:"hash"`
+	Memos []map[string]interface{} `mapstructure:"Memos"`
 }
 
 func (c Client) GetLatestBlockNumber(context.Context) (uint64, error) {
@@ -79,7 +85,7 @@ func (c Client) GetBlockResult(
 		"command":      "ledger",
 		"ledger_index": blockNum,
 		"transactions": true,
-		"expand":       false,
+		"expand":       true,
 		"owner_funds":  false,
 	})
 	if err != nil {
@@ -108,11 +114,33 @@ func (c Client) GetBlockResult(
 
 	transactions := make([]Transaction, len(result.Ledger.Transactions))
 	for i := range transactions {
+		tx := &result.Ledger.Transactions[i]
+
+		memosJSON, err := encodeMemos(tx.Memos)
+		if err != nil {
+			return nil, errors.Wrap(err, "json.Marshal(tx.Memos)")
+		}
+
 		transactions[i] = Transaction{
-			Hash:      result.Ledger.Transactions[i],
+			Hash:      tx.Hash,
 			BlockHash: result.LedgerHash,
+			Memos:     memosJSON,
 		}
 	}
 
 	return &indexer.BlockResult[Block, Transaction]{Block: block, Transactions: transactions}, nil
+}
+
+func encodeMemos(memos []map[string]interface{}) ([]json.RawMessage, error) {
+	memosJSON := make([]json.RawMessage, len(memos))
+	for i, memo := range memos {
+		memoJSON, err := json.Marshal(memo)
+		if err != nil {
+			return nil, err
+		}
+
+		memosJSON[i] = memoJSON
+	}
+
+	return memosJSON, nil
 }
