@@ -39,8 +39,6 @@ github.com/xrpscan/xrpl-go v0.2.4 h1:tvRaDsz+q57mFEgcOO2W9Ercrqrgv8z3nhAvasKPYNg
 github.com/xrpscan/xrpl-go v0.2.4/go.mod h1:JEc8l/lsJEae1cIJ2RUjm9vZ1g9Etb6JK5E4wHVgALY=
 gitlab.com/ryancollingham/flare-common v0.0.0-20240730151714-1170f15b9186 h1:Wtfp+cFnaBREjTJr+aezp8zudqOU/L1Dw9P/i0k6UsU=
 gitlab.com/ryancollingham/flare-common v0.0.0-20240730151714-1170f15b9186/go.mod h1:Zwd8QxQqL8pg8Y4yD/Cu4RxYq2PTi+rs1zIOTquaiTU=
-gitlab.com/ryancollingham/flare-indexer-framework v0.0.0-20240812161158-108e6b11329d h1:uMLJMFAc6IJwnd0wIghlgnYTcaOf2EF/1Z2gPR9nUPI=
-gitlab.com/ryancollingham/flare-indexer-framework v0.0.0-20240812161158-108e6b11329d/go.mod h1:B/FAgO/XNgbD2uvqE772J6QSrnb2/K6gAZOBk+um1gk=
 gitlab.com/ryancollingham/flare-indexer-framework v0.0.0-20240812164514-c75f699793cb h1:pHBSFeGaEnVqHNkSjE23puC2clI05xZKHht7OIW1ML8=
 gitlab.com/ryancollingham/flare-indexer-framework v0.0.0-20240812164514-c75f699793cb/go.mod h1:B/FAgO/XNgbD2uvqE772J6QSrnb2/K6gAZOBk+um1gk=
 go.uber.org/goleak v1.3.0 h1:2K3zAYmnTNqV73imy9J1T3WC+gmCePx2hEGkimedGto=
