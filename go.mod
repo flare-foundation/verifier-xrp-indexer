@@ -1,6 +1,6 @@
 module gitlab.com/ryancollingham/flare-xrp-indexer
 
-go 1.22.5
+go 1.23.0
 
 require (
 	github.com/mitchellh/mapstructure v1.5.0
