@@ -1,9 +1,9 @@
 package main
 
 import (
-	"gitlab.com/ryancollingham/flare-common/pkg/logger"
-	"gitlab.com/ryancollingham/flare-indexer-framework/pkg/framework"
-	"gitlab.com/ryancollingham/flare-xrp-indexer/internal/xrp"
+	"gitlab.com/flarenetwork/libs/go-flare-common/pkg/logger"
+	"gitlab.com/flarenetwork/fdc/verifier-indexer-framework/pkg/framework"
+	"gitlab.com/flarenetwork/fdc/verifier-xrp-indexer/internal/xrp"
 )
 
 var log = logger.GetLogger()
