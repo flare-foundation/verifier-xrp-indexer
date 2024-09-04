@@ -1,4 +1,4 @@
-module gitlab.com/ryancollingham/flare-xrp-indexer
+module gitlab.com/flarenetwork/fdc/verifier-xrp-indexer
 
 go 1.23.0
 
@@ -6,8 +6,8 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/xrpscan/xrpl-go v0.2.4
-	gitlab.com/ryancollingham/flare-common v0.0.0-20240730151714-1170f15b9186
-	gitlab.com/ryancollingham/flare-indexer-framework v0.0.0-20240812164514-c75f699793cb
+	gitlab.com/flarenetwork/fdc/verifier-indexer-framework v0.0.0-20240904094322-07f5f9e37ccf
+	gitlab.com/flarenetwork/libs/go-flare-common v0.0.0-20240904083824-3a81e691aebf
 )
 
 require (

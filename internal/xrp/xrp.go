@@ -7,7 +7,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"github.com/xrpscan/xrpl-go"
-	"gitlab.com/ryancollingham/flare-indexer-framework/pkg/indexer"
+	"gitlab.com/flarenetwork/fdc/verifier-indexer-framework/pkg/indexer"
 )
 
 type Config struct {
