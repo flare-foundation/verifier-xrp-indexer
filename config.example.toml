@@ -1,0 +1,14 @@
+[db]
+username = "username"
+password = "password"
+db_name = "flare_xrp_indexer"
+port = 5432
+
+[indexer]
+confirmations = 0
+max_block_range = 100
+max_concurrency = 8
+start_block_number = 50
+
+[blockchain]
+websocket_url = "wss://s.altnet.rippletest.net:51233"
