@@ -3,13 +3,14 @@ username = "username"
 password = "password"
 db_name = "flare_xrp_indexer"
 port = 5432
-drop_table_at_start = false
+drop_table_at_start = true
+history_drop = 3600
 
 [indexer]
 confirmations = 0
 max_block_range = 100
 max_concurrency = 10
-start_block_number = 780000
+start_block_number = 700000
 
 [blockchain]
 url = "https://s.altnet.rippletest.net:51234"

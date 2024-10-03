@@ -10,10 +10,11 @@ var log = logger.GetLogger()
 
 func main() {
 	input := framework.Input[xrp.Block, xrp.Config, xrp.Transaction]{
-		NewBlockchain: xrp.New,
+		NewBlockchainClient: xrp.New,
 	}
 
 	if err := framework.Run(input); err != nil {
 		log.Fatal(err)
 	}
+
 }
