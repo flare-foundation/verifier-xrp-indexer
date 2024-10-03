@@ -1,16 +1,25 @@
 package xrp
 
-import "encoding/json"
-
 type Block struct {
-	Hash      string `gorm:"primaryKey;type:varchar(64)"`
-	Number    uint64 `gorm:"index"`
-	Timestamp uint64 `gorm:"index"`
+	Hash         string `gorm:"primaryKey;type:varchar(64)"`
+	BlockNumber  uint64 `gorm:"index"`
+	Timestamp    uint64 `gorm:"index"`
+	Transactions uint64
 }
 
 type Transaction struct {
-	Hash      string `gorm:"primaryKey;type:varchar(64)"`
-	BlockHash string `gorm:"type:varchar(64)"`
-	Block     *Block
-	Memos     []json.RawMessage `gorm:"type:jsonb"`
+	Hash             string `gorm:"primaryKey;type:varchar(64)"`
+	BlockNumber      uint64 `gorm:"index"`
+	Timestamp        uint64 `gorm:"index"`
+	PaymentReference string `gorm:"index;type:varchar(64)"`
+	Response         string `gorm:"type:varchar"`
+	IsNativePayment  bool   `gorm:"index"`
+}
+
+func (b Block) GetBlockNumber() uint64 {
+	return b.BlockNumber
+}
+
+func (b Block) GetTimestamp() uint64 {
+	return b.Timestamp
 }
