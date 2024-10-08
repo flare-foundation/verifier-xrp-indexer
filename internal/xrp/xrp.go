@@ -127,13 +127,16 @@ func (c XRPClient) GetLedgerResponse(ctx context.Context, request LedgerRequest)
 	return &respStruct, nil
 }
 
-func (c XRPClient) GetLatestBlockInfo(ctx context.Context) (uint64, uint64, error) {
+func (c XRPClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo, error) {
 	respStruct, err := c.GetLedgerResponse(ctx, getLatestStruct)
 	if err != nil {
-		return 0, 0, err
+		return nil, err
 	}
 
-	return respStruct.Result.LedgerIndex, respStruct.Result.Ledger.CloseTime, nil
+	return &indexer.BlockInfo{
+		BlockNumber: respStruct.Result.LedgerIndex,
+		Timestamp:   respStruct.Result.Ledger.CloseTime,
+	}, nil
 }
 
 func (c XRPClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint64, error) {
