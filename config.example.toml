@@ -16,3 +16,8 @@ url = "https://s.altnet.rippletest.net:51234"
 
 [timeout]
 timeout_millis = 3000
+
+[logger]
+level = "DEBUG"
+file = "logs/xrp_indexer.log"
+console = true

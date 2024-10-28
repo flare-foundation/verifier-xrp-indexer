@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/flare-foundation/verifier-indexer-framework/pkg/indexer"
 	"github.com/pkg/errors"
-	"gitlab.com/flarenetwork/fdc/verifier-indexer-framework/pkg/indexer"
 )
 
 const XRPCurrency = "XRP"
