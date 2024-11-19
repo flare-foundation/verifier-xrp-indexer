@@ -5,14 +5,19 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"math/big"
 	"net/http"
 	"strconv"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/flare-foundation/go-flare-common/pkg/merkle"
 	"github.com/flare-foundation/verifier-indexer-framework/pkg/indexer"
 	"github.com/pkg/errors"
 )
 
 const XRPCurrency = "XRP"
+const XRPTimeToUTD = uint64(946684800)
 
 type Config struct {
 	Url string `toml:"url"`
@@ -69,10 +74,30 @@ type XRPTransaction struct {
 	Memos           []map[string]map[string]string `json:"Memos"`
 	TransactionType string                         `json:"TransactionType"`
 	Amount          json.RawMessage                `json:"Amount"`
+	MetaData        json.RawMessage                `json:"metaData"`
 }
 
 type XRPAmount struct {
 	Currency string `json:"currency"`
+}
+
+type XRPMeta struct {
+	AffectedNodes []XRPAffectedNodes `json:"AffectedNodes"`
+}
+
+type XRPAffectedNodes struct {
+	XRPModifiedNode XRPModifiedNode `json:"ModifiedNode"`
+}
+
+type XRPModifiedNode struct {
+	FinalFields     XRPFields `json:"FinalFields"`
+	PreviousFields  XRPFields `json:"PreviousFields"`
+	LedgerEntryType string    `json:"LedgerEntryType"`
+}
+
+type XRPFields struct {
+	Account string          `json:"Account"`
+	Balance json.RawMessage `json:"Balance"`
 }
 
 var getLatestStruct LedgerRequest
@@ -135,7 +160,7 @@ func (c XRPClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo, 
 
 	return &indexer.BlockInfo{
 		BlockNumber: respStruct.Result.LedgerIndex,
-		Timestamp:   respStruct.Result.Ledger.CloseTime,
+		Timestamp:   respStruct.Result.Ledger.CloseTime + XRPTimeToUTD,
 	}, nil
 }
 
@@ -154,7 +179,7 @@ func (c XRPClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint
 		return 0, err
 	}
 
-	return respStruct.Result.Ledger.CloseTime, nil
+	return respStruct.Result.Ledger.CloseTime + XRPTimeToUTD, nil
 }
 
 func (c XRPClient) GetBlockResult(ctx context.Context, blockNum uint64,
@@ -179,7 +204,7 @@ func (c XRPClient) GetBlockResult(ctx context.Context, blockNum uint64,
 	block := Block{
 		Hash:         respStruct.Result.LedgerHash,
 		BlockNumber:  respStruct.Result.LedgerIndex,
-		Timestamp:    respStruct.Result.Ledger.CloseTime,
+		Timestamp:    respStruct.Result.Ledger.CloseTime + XRPTimeToUTD,
 		Transactions: uint64(len(respStruct.Result.Ledger.Transactions)),
 	}
 
@@ -194,12 +219,16 @@ func (c XRPClient) GetBlockResult(ctx context.Context, blockNum uint64,
 		transactions[i] = Transaction{
 			Hash:        tx.Hash,
 			BlockNumber: respStruct.Result.LedgerIndex,
-			Timestamp:   respStruct.Result.Ledger.CloseTime,
+			Timestamp:   respStruct.Result.Ledger.CloseTime + XRPTimeToUTD,
 			Response:    string(respStruct.Result.Ledger.Transactions[i]),
 		}
 
 		transactions[i].PaymentReference = paymentReference(tx)
 		transactions[i].IsNativePayment = isNativePayment(tx)
+		transactions[i].SourceAddressesRoot, err = sourceAddressesRoot(tx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &indexer.BlockResult[Block, Transaction]{Block: block, Transactions: transactions}, nil
@@ -237,4 +266,65 @@ func isNativePayment(tx XRPTransaction) bool {
 	}
 
 	return false
+}
+
+func sourceAddressesRoot(tx XRPTransaction) (string, error) {
+	var meta XRPMeta
+
+	err := json.Unmarshal(tx.MetaData, &meta)
+	if err != nil {
+		return "", errors.New("unable to unmarshall source addresses")
+	}
+
+	sourceAddresses := make([]common.Hash, 0)
+	for _, node := range meta.AffectedNodes {
+		modifiedNode := node.XRPModifiedNode
+		if modifiedNode.LedgerEntryType != "AccountRoot" || modifiedNode.FinalFields.Account == "" {
+			continue
+		}
+
+		var balance string
+		finalVal := big.NewInt(0)
+		var check bool
+		if len(modifiedNode.FinalFields.Balance) > 0 {
+			err = json.Unmarshal(modifiedNode.FinalFields.Balance, &balance)
+			if err != nil {
+				return "", errors.Wrap(err, "unable to unmarshall final balance")
+			}
+			finalVal, check = new(big.Int).SetString(balance, 10)
+			if !check {
+				return "", errors.New("unable to parse balance")
+			}
+		}
+
+		previousVal := big.NewInt(0)
+		if len(modifiedNode.PreviousFields.Balance) > 0 {
+			err = json.Unmarshal(modifiedNode.PreviousFields.Balance, &balance)
+			if err != nil {
+				return "", errors.Wrap(err, "unable to unmarshall previous balance")
+			}
+			previousVal, check = new(big.Int).SetString(balance, 10)
+			if !check {
+				return "", errors.New("unable to parse balance")
+			}
+		}
+
+		diff := new(big.Int).Sub(finalVal, previousVal)
+		if diff.Cmp(big.NewInt(0)) < 0 {
+			hashedAddress := crypto.Keccak256Hash(crypto.Keccak256Hash([]byte(modifiedNode.FinalFields.Account)).Bytes())
+			sourceAddresses = append(sourceAddresses, hashedAddress)
+		}
+	}
+
+	if len(sourceAddresses) > 0 {
+		merkleTree := merkle.Build(sourceAddresses, false)
+		root, err := merkleTree.Root()
+		if err != nil {
+			return "", err
+		}
+
+		return root.Hex()[2:], nil
+	}
+
+	return "", nil
 }

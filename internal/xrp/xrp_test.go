@@ -11,7 +11,7 @@ import (
 )
 
 var testBlockNum = uint64(1725668)
-var testBlockTimestamp = uint64(783002761)
+var testBlockTimestamp = uint64(783002761) + xrp.XRPTimeToUTD
 
 func TestGetLatestBlockInfo(t *testing.T) {
 	cfg := xrp.Config{"https://s.altnet.rippletest.net:51234"}
@@ -24,13 +24,8 @@ func TestGetLatestBlockInfo(t *testing.T) {
 	cancelFunc()
 	require.NoError(t, err)
 
-	const layout = "2006-Jan-02"
-	startTime, err := time.Parse(layout, "2000-Jan-01")
-	require.NoError(t, err)
-
-	timeNow := uint64(time.Since(startTime).Seconds())
-
-	require.Greater(t, timeNow, blockInfo.Timestamp)
+	timeNow := uint64(time.Now().Unix())
+	require.Greater(t, timeNow, blockInfo.Timestamp-10)
 	require.Greater(t, blockInfo.Timestamp+60, timeNow)
 
 	require.Greater(t, blockInfo.BlockNumber, testBlockNum)
