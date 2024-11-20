@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -217,7 +218,7 @@ func (c XRPClient) GetBlockResult(ctx context.Context, blockNum uint64,
 		}
 
 		transactions[i] = Transaction{
-			Hash:        tx.Hash,
+			Hash:        strings.ToLower(tx.Hash),
 			BlockNumber: respStruct.Result.LedgerIndex,
 			Timestamp:   respStruct.Result.Ledger.CloseTime + XRPTimeToUTD,
 			Response:    string(respStruct.Result.Ledger.Transactions[i]),
@@ -239,7 +240,7 @@ func paymentReference(tx XRPTransaction) string {
 		if memo, ok := tx.Memos[0]["Memo"]; ok {
 			if memoData, ok := memo["MemoData"]; ok {
 				if len(memoData) == 64 {
-					return memoData
+					return strings.ToLower(memoData)
 				}
 			}
 		}
@@ -323,7 +324,7 @@ func sourceAddressesRoot(tx XRPTransaction) (string, error) {
 			return "", err
 		}
 
-		return root.Hex()[2:], nil
+		return strings.ToLower(root.Hex()[2:]), nil
 	}
 
 	return "", nil
