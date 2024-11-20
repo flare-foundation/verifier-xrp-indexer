@@ -203,7 +203,7 @@ func (c XRPClient) GetBlockResult(ctx context.Context, blockNum uint64,
 	}
 
 	block := Block{
-		Hash:         respStruct.Result.LedgerHash,
+		Hash:         strings.ToLower(respStruct.Result.LedgerHash),
 		BlockNumber:  respStruct.Result.LedgerIndex,
 		Timestamp:    respStruct.Result.Ledger.CloseTime + XRPTimeToUTD,
 		Transactions: uint64(len(respStruct.Result.Ledger.Transactions)),
