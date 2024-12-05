@@ -1,13 +1,13 @@
 (*indexer.BlockResult[github.com/flare-foundation/verifier-xrp-indexer/internal/xrp.Block,github.com/flare-foundation/verifier-xrp-indexer/internal/xrp.Transaction])({
   Block: (xrp.Block) {
-    Hash: (string) (len=64) "E6ED42458DE170A4D95544561C7DF715C3A808EAD9A3D1D669D187366FE568F6",
+    Hash: (string) (len=64) "e6ed42458de170a4d95544561c7df715c3a808ead9a3d1d669d187366fe568f6",
     BlockNumber: (uint64) 1725668,
     Timestamp: (uint64) 1729687561,
     Transactions: (uint64) 10
   },
   Transactions: ([]xrp.Transaction) (len=10) {
     (xrp.Transaction) {
-      Hash: (string) (len=64) "1F572E746A69EDDE0C134824491567CC438CFB18A40AA0FD321E8143E70E9064",
+      Hash: (string) (len=64) "1f572e746a69edde0c134824491567cc438cfb18a40aa0fd321e8143e70e9064",
       BlockNumber: (uint64) 1725668,
       Timestamp: (uint64) 1729687561,
       PaymentReference: (string) "",
@@ -16,7 +16,7 @@
       SourceAddressesRoot: (string) (len=64) "674fa9a46079864ce1744486bd1a7069794c8aade76b2d0424c4e716fba4f4ef"
     },
     (xrp.Transaction) {
-      Hash: (string) (len=64) "53040EB07116518D9866E3E6DE504AA718F162B19A441E80C5045F68492B385B",
+      Hash: (string) (len=64) "53040eb07116518d9866e3e6de504aa718f162b19a441e80c5045f68492b385b",
       BlockNumber: (uint64) 1725668,
       Timestamp: (uint64) 1729687561,
       PaymentReference: (string) (len=64) "4642505266410001000000000000000000000000000000000000000003873226",
@@ -25,7 +25,7 @@
       SourceAddressesRoot: (string) (len=64) "7c7efcd5e28a5f7b9b5ade3dd16008deaae30e3588d854be8e0dff1cad3c5aa0"
     },
     (xrp.Transaction) {
-      Hash: (string) (len=64) "6A460D8C7919608C1D10883C6D9AD9D48C9E82B7058969039D94F42C7CFE49BF",
+      Hash: (string) (len=64) "6a460d8c7919608c1d10883c6d9ad9d48c9e82b7058969039d94f42c7cfe49bf",
       BlockNumber: (uint64) 1725668,
       Timestamp: (uint64) 1729687561,
       PaymentReference: (string) "",
@@ -34,7 +34,7 @@
       SourceAddressesRoot: (string) (len=64) "cdbdabb5f4dbb023c42a28a0c63ec021e55727f4e9b67f94b8ce06de5c35083f"
     },
     (xrp.Transaction) {
-      Hash: (string) (len=64) "7037BD4D653C5483D412AEED02A2A50FEB7E3BD09772D0E0B6810F1F2672B380",
+      Hash: (string) (len=64) "7037bd4d653c5483d412aeed02a2a50feb7e3bd09772d0e0b6810f1f2672b380",
       BlockNumber: (uint64) 1725668,
       Timestamp: (uint64) 1729687561,
       PaymentReference: (string) "",
@@ -43,7 +43,7 @@
       SourceAddressesRoot: (string) (len=64) "cdbdabb5f4dbb023c42a28a0c63ec021e55727f4e9b67f94b8ce06de5c35083f"
     },
     (xrp.Transaction) {
-      Hash: (string) (len=64) "98153FDC7732DBF5AEF5D4A25FDCDE7025C1BACA87C31F77CB3EB42FFE01DC26",
+      Hash: (string) (len=64) "98153fdc7732dbf5aef5d4a25fdcde7025c1baca87c31f77cb3eb42ffe01dc26",
       BlockNumber: (uint64) 1725668,
       Timestamp: (uint64) 1729687561,
       PaymentReference: (string) "",
@@ -52,7 +52,7 @@
       SourceAddressesRoot: (string) (len=64) "8c34c34226d18c85760e46134cf55cb6d27441965cf011fedf9ae28066be4937"
     },
     (xrp.Transaction) {
-      Hash: (string) (len=64) "C20EA5FA520614F0CFA5DC95616B9F208CD3E7697DDBDC28D472AA8EA091C76C",
+      Hash: (string) (len=64) "c20ea5fa520614f0cfa5dc95616b9f208cd3e7697ddbdc28d472aa8ea091c76c",
       BlockNumber: (uint64) 1725668,
       Timestamp: (uint64) 1729687561,
       PaymentReference: (string) "",
@@ -61,7 +61,7 @@
       SourceAddressesRoot: (string) (len=64) "cdbdabb5f4dbb023c42a28a0c63ec021e55727f4e9b67f94b8ce06de5c35083f"
     },
     (xrp.Transaction) {
-      Hash: (string) (len=64) "C462C4C3468CC77A4D7A8449E25270C07E082AF2DCD10A80CE5AD9CF5DEC5BC3",
+      Hash: (string) (len=64) "c462c4c3468cc77a4d7a8449e25270c07e082af2dcd10a80ce5ad9cf5dec5bc3",
       BlockNumber: (uint64) 1725668,
       Timestamp: (uint64) 1729687561,
       PaymentReference: (string) "",
@@ -70,7 +70,7 @@
       SourceAddressesRoot: (string) (len=64) "2f6bb581d3ce812e08de495969f68c6f4cb9b92a4d99a99ca73c549c29765a1e"
     },
     (xrp.Transaction) {
-      Hash: (string) (len=64) "D15CC4342C0D8F52C8B0F93853A36FB60A761D57E5A7D23F180D26469C4BA0EE",
+      Hash: (string) (len=64) "d15cc4342c0d8f52c8b0f93853a36fb60a761d57e5a7d23f180d26469c4ba0ee",
       BlockNumber: (uint64) 1725668,
       Timestamp: (uint64) 1729687561,
       PaymentReference: (string) "",
@@ -79,7 +79,7 @@
       SourceAddressesRoot: (string) (len=64) "cd5c2a00f2921749dd0f8bc843db27142c99249b25abda93dca4535e6782e34b"
     },
     (xrp.Transaction) {
-      Hash: (string) (len=64) "EA19D984C082532B6D09F8E8EBE73A2D136C49C4F3E922C6CDDB9CE739B33E7F",
+      Hash: (string) (len=64) "ea19d984c082532b6d09f8e8ebe73a2d136c49c4f3e922c6cddb9ce739b33e7f",
       BlockNumber: (uint64) 1725668,
       Timestamp: (uint64) 1729687561,
       PaymentReference: (string) "",
@@ -88,7 +88,7 @@
       SourceAddressesRoot: (string) (len=64) "69166bb9a9f9194e3b2c2089d943c0f74e56f627fb52ab4aedd4315bf26cac70"
     },
     (xrp.Transaction) {
-      Hash: (string) (len=64) "EAD932C22AE5B0573B3D8B16CA5D6AE4736BDFA3A1467EA9AE5ED8084406B8E9",
+      Hash: (string) (len=64) "ead932c22ae5b0573b3d8b16ca5d6ae4736bdfa3a1467ea9ae5ed8084406b8e9",
       BlockNumber: (uint64) 1725668,
       Timestamp: (uint64) 1729687561,
       PaymentReference: (string) "",

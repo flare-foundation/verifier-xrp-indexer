@@ -3,11 +3,12 @@ username = "username"
 password = "password"
 db_name = "flare_xrp_indexer"
 port = 5432
-drop_table_at_start = true
+drop_table_at_start = false
 history_drop = 3600
+history_drop_frequency = 600
 
 [indexer]
-confirmations = 0
+confirmations = 1
 max_block_range = 100
 max_concurrency = 10
 start_block_number = 700000
@@ -16,7 +17,8 @@ start_block_number = 700000
 url = "https://s.altnet.rippletest.net:51234"
 
 [timeout]
-timeout_millis = 3000
+request_timeout_millis = 3000
+backoff_max_elapsed_time_seconds = 300
 
 [logger]
 level = "DEBUG"

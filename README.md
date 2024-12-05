@@ -40,13 +40,16 @@ Provide a `.toml` config file with the following fields (mostly self explanatory
 
 ```toml
 [db]
-username = "username"
-password = "password"
+username = "username" # can be specified with env DB_USERNAME
+password = "password" # can be specified with env DB_PASSWORD
 db_name = "flare_xrp_indexer"
 port = 5432
 drop_table_at_start = false
+history_drop = 3600 # delete all historic data in database older than this value, in seconds
+history_drop_frequency = 600 # frequency of history drops, in seconds
 
 [indexer]
+confirmations = 1 # number of confirmed blocks before the data is included in the DB
 max_block_range = 100 # size of a batch to be repeatedly queried and saved in a dataset
 max_concurrency = 10 # number of concurrent processes querying data from the RPC node
 start_block_number = 780000
@@ -55,7 +58,8 @@ start_block_number = 780000
 url = "https://s.altnet.rippletest.net:51234"
 
 [timeout]
-timeout_millis = 1000
+request_timeout_millis = 3000 # timeout requests to the chain and the dataset
+backoff_max_elapsed_time_seconds = 300 # maximum time between retries
 
 [logger]
 level = "DEBUG"
