@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   postgresdb:
     container_name: xrp_verifier_db
