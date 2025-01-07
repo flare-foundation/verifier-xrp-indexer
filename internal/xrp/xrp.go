@@ -42,12 +42,12 @@ type XRPClient struct {
 	Headers http.Header
 }
 
-type LedgerRequest struct {
-	Method string       `json:"method"`
-	Params []XRPParamas `json:"params"`
+type XRPRequest struct {
+	Method string        `json:"method"`
+	Params []interface{} `json:"params"`
 }
 
-type XRPParamas struct {
+type LedgerParams struct {
 	LedgerIndex  string `json:"ledger_index"`
 	Transactions bool   `json:"transactions"`
 	Expand       bool   `json:"expand"`
@@ -55,10 +55,10 @@ type XRPParamas struct {
 }
 
 type LedgerResponse struct {
-	Result XRPResult `json:"result"`
+	Result LedgerResult `json:"result"`
 }
 
-type XRPResult struct {
+type LedgerResult struct {
 	LedgerIndex uint64    `json:"ledger_index"`
 	LedgerHash  string    `json:"ledger_hash"`
 	Validated   bool      `json:"validated"`
@@ -101,21 +101,39 @@ type XRPFields struct {
 	Balance json.RawMessage `json:"Balance"`
 }
 
-var getLatestStruct LedgerRequest
+type ServerInfoRequest struct {
+	Method string `json:"method"`
+}
+
+type ServerInfoResponse struct {
+	Result ServerInfoResult `json:"result"`
+}
+
+type ServerInfoResult struct {
+	Info ServerInfo `json:"info"`
+}
+
+type ServerInfo struct {
+	BuildVersion string `json:"build_version"`
+	ServerState  string `json:"server_state"`
+}
+
+var getLatestParams LedgerParams
+var getServerState XRPRequest
 
 func init() {
-	getLatestStruct = LedgerRequest{
-		Method: "ledger",
-		Params: []XRPParamas{{
-			LedgerIndex:  "validated",
-			Transactions: false,
-			Expand:       false,
-			OwnerFunds:   false,
-		}},
+	getLatestParams = LedgerParams{
+		LedgerIndex:  "validated",
+		Transactions: false,
+		Expand:       false,
+		OwnerFunds:   false,
+	}
+	getServerState = XRPRequest{
+		Method: "server_info",
 	}
 }
 
-func (c XRPClient) GetLedgerResponse(ctx context.Context, request LedgerRequest) (*LedgerResponse, error) {
+func (c XRPClient) GetResponse(ctx context.Context, request XRPRequest) ([]byte, error) {
 	getReq, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
@@ -144,6 +162,20 @@ func (c XRPClient) GetLedgerResponse(ctx context.Context, request LedgerRequest)
 		return nil, err
 	}
 
+	return resBody, nil
+}
+
+func (c XRPClient) GetLedgerResponse(ctx context.Context, params LedgerParams) (*LedgerResponse, error) {
+	request := XRPRequest{
+		Method: "ledger",
+		Params: []interface{}{params},
+	}
+
+	resBody, err := c.GetResponse(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
 	var respStruct LedgerResponse
 	err = json.Unmarshal(resBody, &respStruct)
 	if err != nil {
@@ -154,7 +186,7 @@ func (c XRPClient) GetLedgerResponse(ctx context.Context, request LedgerRequest)
 }
 
 func (c XRPClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo, error) {
-	respStruct, err := c.GetLedgerResponse(ctx, getLatestStruct)
+	respStruct, err := c.GetLedgerResponse(ctx, getLatestParams)
 	if err != nil {
 		return nil, err
 	}
@@ -166,16 +198,13 @@ func (c XRPClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo, 
 }
 
 func (c XRPClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint64, error) {
-	getBlockStruct := LedgerRequest{
-		Method: "ledger",
-		Params: []XRPParamas{{
-			LedgerIndex:  strconv.Itoa(int(blockNum)),
-			Transactions: false,
-			Expand:       false,
-			OwnerFunds:   false,
-		}},
+	getBlockParams := LedgerParams{
+		LedgerIndex:  strconv.Itoa(int(blockNum)),
+		Transactions: false,
+		Expand:       false,
+		OwnerFunds:   false,
 	}
-	respStruct, err := c.GetLedgerResponse(ctx, getBlockStruct)
+	respStruct, err := c.GetLedgerResponse(ctx, getBlockParams)
 	if err != nil {
 		return 0, err
 	}
@@ -185,16 +214,13 @@ func (c XRPClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint
 
 func (c XRPClient) GetBlockResult(ctx context.Context, blockNum uint64,
 ) (*indexer.BlockResult[Block, Transaction], error) {
-	getBlockStruct := LedgerRequest{
-		Method: "ledger",
-		Params: []XRPParamas{{
-			LedgerIndex:  strconv.Itoa(int(blockNum)),
-			Transactions: true,
-			Expand:       true,
-			OwnerFunds:   false,
-		}},
+	getBlockParams := LedgerParams{
+		LedgerIndex:  strconv.Itoa(int(blockNum)),
+		Transactions: true,
+		Expand:       true,
+		OwnerFunds:   false,
 	}
-	respStruct, err := c.GetLedgerResponse(ctx, getBlockStruct)
+	respStruct, err := c.GetLedgerResponse(ctx, getBlockParams)
 	if err != nil {
 		return nil, err
 	}
@@ -328,4 +354,18 @@ func sourceAddressesRoot(tx XRPTransaction) (string, error) {
 	}
 
 	return "", nil
+}
+
+func (c XRPClient) GetServerInfo(ctx context.Context) (string, error) {
+	resBody, err := c.GetResponse(ctx, getServerState)
+	if err != nil {
+		return "", err
+	}
+	var respStruct ServerInfoResponse
+	err = json.Unmarshal(resBody, &respStruct)
+	if err != nil {
+		return "", err
+	}
+
+	return respStruct.Result.Info.BuildVersion + "_" + respStruct.Result.Info.ServerState, nil
 }

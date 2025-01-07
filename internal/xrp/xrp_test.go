@@ -2,6 +2,7 @@ package xrp_test
 
 import (
 	"context"
+	"strconv"
 	"testing"
 	"time"
 
@@ -60,4 +61,19 @@ func TestGetBlockResult(t *testing.T) {
 	require.Equal(t, testBlockTimestamp, blockResult.Block.GetTimestamp())
 
 	cupaloy.SnapshotT(t, blockResult)
+}
+
+func TestGetServerInfo(t *testing.T) {
+	cfg := xrp.Config{"https://s.altnet.rippletest.net:51234"}
+
+	chainClient, err := xrp.New(&cfg)
+	require.NoError(t, err)
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 3*time.Second)
+	serverInfo, err := chainClient.GetServerInfo(ctx)
+	cancelFunc()
+	require.NoError(t, err)
+
+	_, err = strconv.Atoi(serverInfo[0:1])
+	require.NoError(t, err)
 }

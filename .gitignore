@@ -3,3 +3,8 @@ coverage.out
 
 # Logs
 /logs
+
+# build info
+PROJECT_BUILD_DATE
+PROJECT_COMMIT_HASH
+PROJECT_VERSION
