@@ -25,6 +25,8 @@ github.com/flare-foundation/go-flare-common v1.0.2 h1:GZTQMmIBMVhEMMe2smuGu46jWN
 github.com/flare-foundation/go-flare-common v1.0.2/go.mod h1:Pb1OAtNe8jNsD2fh6syJD6kVdqxAAXWESTGgd7uQlME=
 github.com/flare-foundation/verifier-indexer-framework v1.0.0 h1:Jg5FiEpJhG6P/J56Kj6/3r9xRIiYuAM7HQdECzDf2EE=
 github.com/flare-foundation/verifier-indexer-framework v1.0.0/go.mod h1:oaed4K4QdNOVCOHj9ydQgyA2ggGXu5wh8zNWlV5Q2Uw=
+github.com/flare-foundation/verifier-indexer-framework v1.0.1 h1:YTLYKtAiPBga1ZquqePWFq93esxlWdp24Kh6O3pg+g4=
+github.com/flare-foundation/verifier-indexer-framework v1.0.1/go.mod h1:oaed4K4QdNOVCOHj9ydQgyA2ggGXu5wh8zNWlV5Q2Uw=
 github.com/holiman/uint256 v1.2.4 h1:jUc4Nk8fm9jZabQuqr2JzednajVmBpC+oiTiXZJEApU=
 github.com/holiman/uint256 v1.2.4/go.mod h1:EOMSn4q6Nyt9P6efbI3bueV4e1b3dGlUCXeiRV4ng7E=
 github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsIM=
