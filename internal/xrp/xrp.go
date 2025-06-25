@@ -17,8 +17,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-const XRPCurrency = "XRP"
-const XRPTimeToUTD = uint64(946684800)
+const (
+	xrpCurrency  = "XRP"
+	XRPTimeToUTD = uint64(946684800)
+)
 
 type Config struct {
 	Url string `toml:"url"`
@@ -29,48 +31,48 @@ func New(cfg *Config) (indexer.BlockchainClient[Block, Transaction], error) {
 		return nil, errors.New("url must be provided")
 	}
 
-	xrpClient := XRPClient{
-		Client: http.DefaultClient,
-		Url:    cfg.Url}
+	xrpClient := xrpClient{
+		client: http.DefaultClient,
+		url:    cfg.Url,
+	}
 
 	return xrpClient, nil
 }
 
-type XRPClient struct {
-	Client  *http.Client
-	Url     string
-	Headers http.Header
+type xrpClient struct {
+	client *http.Client
+	url    string
 }
 
-type XRPRequest struct {
+type xrpRequest struct {
 	Method string        `json:"method"`
 	Params []interface{} `json:"params"`
 }
 
-type LedgerParams struct {
+type ledgerParams struct {
 	LedgerIndex  string `json:"ledger_index"`
 	Transactions bool   `json:"transactions"`
 	Expand       bool   `json:"expand"`
 	OwnerFunds   bool   `json:"owner_funds"`
 }
 
-type LedgerResponse struct {
-	Result LedgerResult `json:"result"`
+type ledgerResponse struct {
+	Result ledgerResult `json:"result"`
 }
 
-type LedgerResult struct {
+type ledgerResult struct {
 	LedgerIndex uint64    `json:"ledger_index"`
 	LedgerHash  string    `json:"ledger_hash"`
 	Validated   bool      `json:"validated"`
-	Ledger      XRPLedger `json:"ledger"`
+	Ledger      xrpLedger `json:"ledger"`
 }
 
-type XRPLedger struct {
+type xrpLedger struct {
 	CloseTime    uint64 `json:"close_time"`
 	Transactions []json.RawMessage
 }
 
-type XRPTransaction struct {
+type xrpTransaction struct {
 	Hash            string                         `json:"hash"`
 	Memos           []map[string]map[string]string `json:"Memos"`
 	TransactionType string                         `json:"TransactionType"`
@@ -78,69 +80,61 @@ type XRPTransaction struct {
 	MetaData        json.RawMessage                `json:"metaData"`
 }
 
-type XRPAmount struct {
+type xrpAmount struct {
 	Currency string `json:"currency"`
 }
 
-type XRPMeta struct {
-	AffectedNodes []XRPAffectedNodes `json:"AffectedNodes"`
+type xrpMeta struct {
+	AffectedNodes []xrpAffectedNodes `json:"AffectedNodes"`
 }
 
-type XRPAffectedNodes struct {
-	XRPModifiedNode XRPModifiedNode `json:"ModifiedNode"`
+type xrpAffectedNodes struct {
+	ModifiedNode xrpModifiedNode `json:"ModifiedNode"`
 }
 
-type XRPModifiedNode struct {
-	FinalFields     XRPFields `json:"FinalFields"`
-	PreviousFields  XRPFields `json:"PreviousFields"`
+type xrpModifiedNode struct {
+	FinalFields     xrpFields `json:"FinalFields"`
+	PreviousFields  xrpFields `json:"PreviousFields"`
 	LedgerEntryType string    `json:"LedgerEntryType"`
 }
 
-type XRPFields struct {
+type xrpFields struct {
 	Account string          `json:"Account"`
 	Balance json.RawMessage `json:"Balance"`
 }
 
-type ServerInfoRequest struct {
-	Method string `json:"method"`
+type serverInfoResponse struct {
+	Result serverInfoResult `json:"result"`
 }
 
-type ServerInfoResponse struct {
-	Result ServerInfoResult `json:"result"`
+type serverInfoResult struct {
+	Info serverInfo `json:"info"`
 }
 
-type ServerInfoResult struct {
-	Info ServerInfo `json:"info"`
-}
-
-type ServerInfo struct {
+type serverInfo struct {
 	BuildVersion string `json:"build_version"`
 	ServerState  string `json:"server_state"`
 }
 
-var getLatestParams LedgerParams
-var getServerState XRPRequest
-
-func init() {
-	getLatestParams = LedgerParams{
-		LedgerIndex:  "validated",
-		Transactions: false,
-		Expand:       false,
-		OwnerFunds:   false,
-	}
-	getServerState = XRPRequest{
-		Method: "server_info",
-	}
+var getLatestParams = ledgerParams{
+	LedgerIndex:  "validated",
+	Transactions: false,
+	Expand:       false,
+	OwnerFunds:   false,
 }
 
-func (c XRPClient) GetResponse(ctx context.Context, request XRPRequest) ([]byte, error) {
+var getServerState = xrpRequest{
+	Method: "server_info",
+}
+
+func (c xrpClient) GetResponse(ctx context.Context, request xrpRequest) ([]byte, error) {
 	getReq, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
 
 	buf := bytes.NewBuffer(getReq)
-	req, err := http.NewRequest("POST", c.Url, buf)
+	req, err := http.NewRequest("POST", c.url, buf)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +143,7 @@ func (c XRPClient) GetResponse(ctx context.Context, request XRPRequest) ([]byte,
 	req.Header.Set("content-type", "application/json")
 	req = req.WithContext(ctx)
 
-	resp, err := c.Client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -165,8 +159,8 @@ func (c XRPClient) GetResponse(ctx context.Context, request XRPRequest) ([]byte,
 	return resBody, nil
 }
 
-func (c XRPClient) GetLedgerResponse(ctx context.Context, params LedgerParams) (*LedgerResponse, error) {
-	request := XRPRequest{
+func (c xrpClient) GetLedgerResponse(ctx context.Context, params ledgerParams) (*ledgerResponse, error) {
+	request := xrpRequest{
 		Method: "ledger",
 		Params: []interface{}{params},
 	}
@@ -176,7 +170,7 @@ func (c XRPClient) GetLedgerResponse(ctx context.Context, params LedgerParams) (
 		return nil, err
 	}
 
-	var respStruct LedgerResponse
+	var respStruct ledgerResponse
 	err = json.Unmarshal(resBody, &respStruct)
 	if err != nil {
 		return nil, err
@@ -185,7 +179,7 @@ func (c XRPClient) GetLedgerResponse(ctx context.Context, params LedgerParams) (
 	return &respStruct, nil
 }
 
-func (c XRPClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo, error) {
+func (c xrpClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo, error) {
 	respStruct, err := c.GetLedgerResponse(ctx, getLatestParams)
 	if err != nil {
 		return nil, err
@@ -197,8 +191,8 @@ func (c XRPClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo, 
 	}, nil
 }
 
-func (c XRPClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint64, error) {
-	getBlockParams := LedgerParams{
+func (c xrpClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint64, error) {
+	getBlockParams := ledgerParams{
 		LedgerIndex:  strconv.Itoa(int(blockNum)),
 		Transactions: false,
 		Expand:       false,
@@ -212,9 +206,9 @@ func (c XRPClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint
 	return respStruct.Result.Ledger.CloseTime + XRPTimeToUTD, nil
 }
 
-func (c XRPClient) GetBlockResult(ctx context.Context, blockNum uint64,
+func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
 ) (*indexer.BlockResult[Block, Transaction], error) {
-	getBlockParams := LedgerParams{
+	getBlockParams := ledgerParams{
 		LedgerIndex:  strconv.Itoa(int(blockNum)),
 		Transactions: true,
 		Expand:       true,
@@ -237,7 +231,7 @@ func (c XRPClient) GetBlockResult(ctx context.Context, blockNum uint64,
 
 	transactions := make([]Transaction, len(respStruct.Result.Ledger.Transactions))
 	for i := range transactions {
-		var tx XRPTransaction
+		var tx xrpTransaction
 		err = json.Unmarshal([]byte(respStruct.Result.Ledger.Transactions[i]), &tx)
 		if err != nil {
 			return nil, err
@@ -261,7 +255,7 @@ func (c XRPClient) GetBlockResult(ctx context.Context, blockNum uint64,
 	return &indexer.BlockResult[Block, Transaction]{Block: block, Transactions: transactions}, nil
 }
 
-func paymentReference(tx XRPTransaction) string {
+func paymentReference(tx xrpTransaction) string {
 	if len(tx.Memos) == 1 {
 		if memo, ok := tx.Memos[0]["Memo"]; ok {
 			if memoData, ok := memo["MemoData"]; ok {
@@ -275,7 +269,7 @@ func paymentReference(tx XRPTransaction) string {
 	return ""
 }
 
-func isNativePayment(tx XRPTransaction) bool {
+func isNativePayment(tx xrpTransaction) bool {
 	if tx.TransactionType == "Payment" {
 		var amountStr string
 		err := json.Unmarshal(tx.Amount, &amountStr)
@@ -285,9 +279,9 @@ func isNativePayment(tx XRPTransaction) bool {
 				return true
 			}
 		}
-		var amountStruct XRPAmount
+		var amountStruct xrpAmount
 		err = json.Unmarshal(tx.Amount, &amountStruct)
-		if err == nil && amountStruct.Currency == XRPCurrency {
+		if err == nil && amountStruct.Currency == xrpCurrency {
 			return true
 		}
 	}
@@ -295,8 +289,8 @@ func isNativePayment(tx XRPTransaction) bool {
 	return false
 }
 
-func sourceAddressesRoot(tx XRPTransaction) (string, error) {
-	var meta XRPMeta
+func sourceAddressesRoot(tx xrpTransaction) (string, error) {
+	var meta xrpMeta
 
 	err := json.Unmarshal(tx.MetaData, &meta)
 	if err != nil {
@@ -305,7 +299,7 @@ func sourceAddressesRoot(tx XRPTransaction) (string, error) {
 
 	sourceAddresses := make([]common.Hash, 0)
 	for _, node := range meta.AffectedNodes {
-		modifiedNode := node.XRPModifiedNode
+		modifiedNode := node.ModifiedNode
 		if modifiedNode.LedgerEntryType != "AccountRoot" || modifiedNode.FinalFields.Account == "" {
 			continue
 		}
@@ -356,12 +350,12 @@ func sourceAddressesRoot(tx XRPTransaction) (string, error) {
 	return "", nil
 }
 
-func (c XRPClient) GetServerInfo(ctx context.Context) (string, error) {
+func (c xrpClient) GetServerInfo(ctx context.Context) (string, error) {
 	resBody, err := c.GetResponse(ctx, getServerState)
 	if err != nil {
 		return "", err
 	}
-	var respStruct ServerInfoResponse
+	var respStruct serverInfoResponse
 	err = json.Unmarshal(resBody, &respStruct)
 	if err != nil {
 		return "", err
