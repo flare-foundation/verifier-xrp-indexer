@@ -31,12 +31,10 @@ func New(cfg *Config) (indexer.BlockchainClient[Block, Transaction], error) {
 		return nil, errors.New("url must be provided")
 	}
 
-	xrpClient := xrpClient{
+	return xrpClient{
 		client: http.DefaultClient,
 		url:    cfg.Url,
-	}
-
-	return xrpClient, nil
+	}, nil
 }
 
 type xrpClient struct {
