@@ -20,6 +20,7 @@ import (
 const (
 	xrpCurrency  = "XRP"
 	XRPTimeToUTD = uint64(946684800)
+	paymentType  = "Payment"
 )
 
 type Config struct {
@@ -242,8 +243,12 @@ func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
 			Response:    string(respStruct.Result.Ledger.Transactions[i]),
 		}
 
-		transactions[i].PaymentReference = paymentReference(tx)
-		transactions[i].IsNativePayment = isNativePayment(tx)
+		// case-insensitive check for transaction type
+		if strings.EqualFold(tx.TransactionType, paymentType) {
+			transactions[i].PaymentReference = paymentReference(tx)
+			transactions[i].IsNativePayment = isNativePayment(tx)
+		}
+
 		transactions[i].SourceAddressesRoot, err = sourceAddressesRoot(tx)
 		if err != nil {
 			return nil, err
@@ -268,23 +273,18 @@ func paymentReference(tx xrpTransaction) string {
 }
 
 func isNativePayment(tx xrpTransaction) bool {
-	if tx.TransactionType == "Payment" {
-		var amountStr string
-		err := json.Unmarshal(tx.Amount, &amountStr)
+	var amountStr string
+	err := json.Unmarshal(tx.Amount, &amountStr)
+	if err == nil {
+		_, err = strconv.Atoi(amountStr)
 		if err == nil {
-			_, err = strconv.Atoi(amountStr)
-			if err == nil {
-				return true
-			}
-		}
-		var amountStruct xrpAmount
-		err = json.Unmarshal(tx.Amount, &amountStruct)
-		if err == nil && amountStruct.Currency == xrpCurrency {
 			return true
 		}
 	}
+	var amountStruct xrpAmount
+	err = json.Unmarshal(tx.Amount, &amountStruct)
 
-	return false
+	return err == nil && amountStruct.Currency == xrpCurrency
 }
 
 func sourceAddressesRoot(tx xrpTransaction) (string, error) {
