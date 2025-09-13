@@ -11,6 +11,8 @@ require (
 	github.com/stretchr/testify v1.9.0
 )
 
+replace github.com/flare-foundation/verifier-indexer-framework => ../flare-indexer-framework
+
 require (
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/alexflint/go-arg v1.5.1 // indirect

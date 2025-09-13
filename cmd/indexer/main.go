@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	input := framework.Input[xrp.Block, xrp.Config, xrp.Transaction]{
+	input := framework.Input[xrp.Block, *xrp.Config, xrp.Transaction]{
 		NewBlockchainClient: xrp.New,
 	}
 

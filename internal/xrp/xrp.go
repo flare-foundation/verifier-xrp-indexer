@@ -7,6 +7,7 @@ import (
 	"io"
 	"math/big"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -36,6 +37,12 @@ func New(cfg *Config) (indexer.BlockchainClient[Block, Transaction], error) {
 		client: http.DefaultClient,
 		url:    cfg.Url,
 	}, nil
+}
+
+func (c *Config) ApplyEnvOverrides() {
+	if url, ok := os.LookupEnv("XRP_URL"); ok {
+		c.Url = url
+	}
 }
 
 type xrpClient struct {
