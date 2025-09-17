@@ -6,12 +6,10 @@ require (
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/ethereum/go-ethereum v1.13.15
 	github.com/flare-foundation/go-flare-common v1.0.2
-	github.com/flare-foundation/verifier-indexer-framework v1.0.3
+	github.com/flare-foundation/verifier-indexer-framework v1.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0
 )
-
-replace github.com/flare-foundation/verifier-indexer-framework => ../flare-indexer-framework
 
 require (
 	github.com/BurntSushi/toml v1.4.0 // indirect
