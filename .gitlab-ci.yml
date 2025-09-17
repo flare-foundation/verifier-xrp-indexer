@@ -43,7 +43,7 @@ test:
   needs: [build]
   cache: !reference [.gocache]
   before_script:
-    - go install github.com/boumenot/gocover-cobertura@1.4.0
+    - go install github.com/boumenot/gocover-cobertura@v1.4.0
   script:
     - go mod download
     - go test -coverpkg=./... -coverprofile=${COVERAGE_FILE} ./...
