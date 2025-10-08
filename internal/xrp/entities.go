@@ -8,8 +8,8 @@ type Block struct {
 }
 
 type Transaction struct {
-	Hash                string `gorm:"primaryKey;type:varchar(64)"`
-	BlockNumber         uint64 `gorm:"index"`
+	Hash                string `gorm:"primaryKey;type:varchar(64);index:idx_block_hash_composite,priority:2,option:CONCURRENTLY"`
+	BlockNumber         uint64 `gorm:"index:idx_block_hash_composite,priority:1,option:CONCURRENTLY"`
 	Timestamp           uint64 `gorm:"index"`
 	PaymentReference    string `gorm:"index;type:varchar(64);default:null"`
 	Response            string `gorm:"type:varchar"`
