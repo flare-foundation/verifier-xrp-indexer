@@ -3,12 +3,11 @@ FROM golang:1.24 AS builder
 WORKDIR /build
 
 COPY go.mod go.sum ./
-RUN go mod download
 
 COPY . ./
 
 # Build the applications
-RUN go build -o /app/xrp-indexer ./cmd/indexer/main.go
+RUN go build -mod=vendor -o /app/xrp-indexer ./cmd/indexer/main.go
 
 RUN git describe --tags --always > PROJECT_VERSION && \
     date --iso-8601=seconds > PROJECT_BUILD_DATE && \
