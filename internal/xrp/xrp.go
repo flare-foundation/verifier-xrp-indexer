@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math/big"
 	"net/http"
@@ -120,6 +121,9 @@ type serverInfoResult struct {
 type serverInfo struct {
 	BuildVersion string `json:"build_version"`
 	ServerState  string `json:"server_state"`
+
+	// Some nodes return "rippled_version" instead of "build_version"
+	RippledVersion string `json:"rippled_version"`
 }
 
 var getLatestParams = ledgerParams{
@@ -360,11 +364,25 @@ func (c xrpClient) GetServerInfo(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	var respStruct serverInfoResponse
 	err = json.Unmarshal(resBody, &respStruct)
 	if err != nil {
 		return "", err
 	}
 
-	return respStruct.Result.Info.BuildVersion + "_" + respStruct.Result.Info.ServerState, nil
+	info := respStruct.Result.Info
+	if info.BuildVersion == "" && info.RippledVersion == "" {
+		return "", errors.New("unable to get server version")
+	}
+
+	if info.BuildVersion == "" {
+		info.BuildVersion = info.RippledVersion
+	}
+
+	if info.ServerState == "" {
+		info.ServerState = "unknown"
+	}
+
+	return fmt.Sprintf("%s_%s", info.BuildVersion, info.ServerState), nil
 }
