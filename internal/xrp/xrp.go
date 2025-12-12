@@ -14,6 +14,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/flare-foundation/go-flare-common/pkg/logger"
 	"github.com/flare-foundation/go-flare-common/pkg/merkle"
 	"github.com/flare-foundation/verifier-indexer-framework/pkg/indexer"
 	"github.com/pkg/errors"
@@ -52,8 +53,8 @@ type xrpClient struct {
 }
 
 type xrpRequest struct {
-	Method string        `json:"method"`
-	Params []interface{} `json:"params"`
+	Method string `json:"method"`
+	Params []any  `json:"params"`
 }
 
 type ledgerParams struct {
@@ -157,6 +158,14 @@ func (c xrpClient) GetResponse(ctx context.Context, request xrpRequest) ([]byte,
 	if err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			logger.Error("error closing response body: %v\n", err)
+		}
+	}()
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New("error response status")
 	}
@@ -172,7 +181,7 @@ func (c xrpClient) GetResponse(ctx context.Context, request xrpRequest) ([]byte,
 func (c xrpClient) GetLedgerResponse(ctx context.Context, params ledgerParams) (*ledgerResponse, error) {
 	request := xrpRequest{
 		Method: "ledger",
-		Params: []interface{}{params},
+		Params: []any{params},
 	}
 
 	resBody, err := c.GetResponse(ctx, request)

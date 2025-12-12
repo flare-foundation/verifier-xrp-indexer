@@ -13,15 +13,15 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-var testBlockNum = uint64(1725668)
-var testBlockTimestamp = uint64(783002761) + xrp.XRPTimeToUTD
+var (
+	testBlockNum       = uint64(1725668)
+	testBlockTimestamp = uint64(783002761) + xrp.XRPTimeToUTD
+)
 
 // Tests for TestGetLatestBlockInfo, TestGetBlockTimestamp and TestGetBlockResult
 type XrpTestSuite struct {
 	suite.Suite
 	chainClient indexer.BlockchainClient[xrp.Block, xrp.Transaction, struct{}]
-	ctx         context.Context
-	cancelFunc  context.CancelFunc
 }
 
 func TestXrpTestSuite(t *testing.T) {
@@ -34,13 +34,10 @@ func (suite *XrpTestSuite) SetupTest() {
 	var err error
 	suite.chainClient, err = xrp.New(&cfg)
 	require.NoError(suite.T(), err)
-
-	suite.ctx, suite.cancelFunc = context.WithTimeout(context.Background(), 3*time.Second)
 }
 
-func (suite *XrpTestSuite) TestGetLatestBlockInfo() {
-	blockInfo, err := suite.chainClient.GetLatestBlockInfo(suite.ctx)
-	suite.cancelFunc()
+func (suite *XrpTestSuite) TestGetLatestBlockInfo(ctx context.Context) {
+	blockInfo, err := suite.chainClient.GetLatestBlockInfo(ctx)
 	suite.NoError(err)
 
 	timeNow := uint64(time.Now().Unix())
@@ -50,17 +47,15 @@ func (suite *XrpTestSuite) TestGetLatestBlockInfo() {
 	suite.Greater(blockInfo.BlockNumber, testBlockNum)
 }
 
-func (suite *XrpTestSuite) TestGetBlockTimestamp() {
-	timestamp, err := suite.chainClient.GetBlockTimestamp(suite.ctx, testBlockNum)
-	suite.cancelFunc()
+func (suite *XrpTestSuite) TestGetBlockTimestamp(ctx context.Context) {
+	timestamp, err := suite.chainClient.GetBlockTimestamp(ctx, testBlockNum)
 	suite.NoError(err)
 
 	suite.Equal(timestamp, testBlockTimestamp)
 }
 
-func (suite *XrpTestSuite) TestGetBlockResult() {
-	blockResult, err := suite.chainClient.GetBlockResult(suite.ctx, testBlockNum)
-	suite.cancelFunc()
+func (suite *XrpTestSuite) TestGetBlockResult(ctx context.Context) {
+	blockResult, err := suite.chainClient.GetBlockResult(ctx, testBlockNum)
 	suite.NoError(err)
 
 	suite.Equal(blockResult.Block.GetBlockNumber(), testBlockNum)
@@ -82,8 +77,6 @@ func (suite *XrpTestSuite) TestGetBlockResult() {
 type XrpWrongUrlTestSuite struct {
 	suite.Suite
 	chainClient indexer.BlockchainClient[xrp.Block, xrp.Transaction, struct{}]
-	ctx         context.Context
-	cancelFunc  context.CancelFunc
 }
 
 func TestXrpWrongUrlTestSuite(t *testing.T) {
@@ -96,25 +89,20 @@ func (suite *XrpWrongUrlTestSuite) SetupTest() {
 	var err error
 	suite.chainClient, err = xrp.New(&cfg)
 	require.NoError(suite.T(), err)
-
-	suite.ctx, suite.cancelFunc = context.WithTimeout(context.Background(), 3*time.Second)
 }
 
-func (suite *XrpWrongUrlTestSuite) TestGetLatestBlockInfo() {
-	_, err := suite.chainClient.GetLatestBlockInfo(suite.ctx)
-	suite.cancelFunc()
+func (suite *XrpWrongUrlTestSuite) TestGetLatestBlockInfo(ctx context.Context) {
+	_, err := suite.chainClient.GetLatestBlockInfo(ctx)
 	suite.Error(err)
 }
 
-func (suite *XrpWrongUrlTestSuite) TestGetBlockTimestamp() {
-	_, err := suite.chainClient.GetBlockTimestamp(suite.ctx, testBlockNum)
-	suite.cancelFunc()
+func (suite *XrpWrongUrlTestSuite) TestGetBlockTimestamp(ctx context.Context) {
+	_, err := suite.chainClient.GetBlockTimestamp(ctx, testBlockNum)
 	suite.Error(err)
 }
 
-func (suite *XrpWrongUrlTestSuite) TestGetBlockResult() {
-	_, err := suite.chainClient.GetBlockResult(suite.ctx, testBlockNum)
-	suite.cancelFunc()
+func (suite *XrpWrongUrlTestSuite) TestGetBlockResult(ctx context.Context) {
+	_, err := suite.chainClient.GetBlockResult(ctx, testBlockNum)
 	suite.Error(err)
 }
 

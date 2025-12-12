@@ -15,5 +15,4 @@ func main() {
 	if err := framework.Run(input); err != nil {
 		logger.Fatal(err)
 	}
-
 }
