@@ -1,5 +1,7 @@
 package xrp
 
+import "github.com/flare-foundation/verifier-indexer-framework/pkg/database"
+
 type Block struct {
 	Hash         string `gorm:"primaryKey;type:varchar(64)"`
 	BlockNumber  uint64 `gorm:"index"`
@@ -23,4 +25,23 @@ func (b Block) GetBlockNumber() uint64 {
 
 func (b Block) GetTimestamp() uint64 {
 	return b.Timestamp
+}
+
+func (b Block) TimestampField() string {
+	return "timestamp"
+}
+
+func (b Block) HistoryDropOrder() []database.Deletable {
+	var block Block
+	var tx Transaction
+
+	// The order does not particularly matter since there are no foreign key constraints.
+	return []database.Deletable{
+		&tx,
+		&block,
+	}
+}
+
+func (t Transaction) TimestampField() string {
+	return "timestamp"
 }

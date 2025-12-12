@@ -19,7 +19,7 @@ var testBlockTimestamp = uint64(783002761) + xrp.XRPTimeToUTD
 // Tests for TestGetLatestBlockInfo, TestGetBlockTimestamp and TestGetBlockResult
 type XrpTestSuite struct {
 	suite.Suite
-	chainClient indexer.BlockchainClient[xrp.Block, xrp.Transaction]
+	chainClient indexer.BlockchainClient[xrp.Block, xrp.Transaction, struct{}]
 	ctx         context.Context
 	cancelFunc  context.CancelFunc
 }
@@ -81,7 +81,7 @@ func (suite *XrpTestSuite) TestGetBlockResult() {
 // with wrong urls in client
 type XrpWrongUrlTestSuite struct {
 	suite.Suite
-	chainClient indexer.BlockchainClient[xrp.Block, xrp.Transaction]
+	chainClient indexer.BlockchainClient[xrp.Block, xrp.Transaction, struct{}]
 	ctx         context.Context
 	cancelFunc  context.CancelFunc
 }

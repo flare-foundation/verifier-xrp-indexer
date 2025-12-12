@@ -1,12 +1,12 @@
 module github.com/flare-foundation/verifier-xrp-indexer
 
-go 1.24.0
+go 1.25.1
 
 require (
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/ethereum/go-ethereum v1.13.15
 	github.com/flare-foundation/go-flare-common v1.0.2
-	github.com/flare-foundation/verifier-indexer-framework v1.0.6
+	github.com/flare-foundation/verifier-indexer-framework v1.0.7-rc.2
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0
 )
@@ -16,6 +16,7 @@ require (
 	github.com/alexflint/go-arg v1.5.1 // indirect
 	github.com/alexflint/go-scalar v1.2.0 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
+	github.com/caarlos0/env/v11 v11.3.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect

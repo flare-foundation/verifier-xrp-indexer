@@ -28,7 +28,7 @@ type Config struct {
 	Url string `toml:"url"`
 }
 
-func New(cfg *Config) (indexer.BlockchainClient[Block, Transaction], error) {
+func New(cfg *Config) (indexer.BlockchainClient[Block, Transaction, struct{}], error) {
 	if cfg.Url == "" {
 		return nil, errors.New("url must be provided")
 	}
@@ -213,7 +213,7 @@ func (c xrpClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint
 }
 
 func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
-) (*indexer.BlockResult[Block, Transaction], error) {
+) (*indexer.BlockResult[Block, Transaction, struct{}], error) {
 	getBlockParams := ledgerParams{
 		LedgerIndex:  strconv.Itoa(int(blockNum)),
 		Transactions: true,
@@ -262,7 +262,7 @@ func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
 		}
 	}
 
-	return &indexer.BlockResult[Block, Transaction]{Block: block, Transactions: transactions}, nil
+	return &indexer.BlockResult[Block, Transaction, struct{}]{Block: block, Transactions: transactions}, nil
 }
 
 func paymentReference(tx xrpTransaction) string {
