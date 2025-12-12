@@ -1,3 +1,21 @@
+<!-- LOGO -->
+
+<div align="center">
+  <a href="https://flare.network/" target="blank">
+    <img src="https://content.flare.network/Flare-2.svg" width="300" alt="Flare Logo" />
+  </a>
+  <br />
+  indexer for the XRP blockchain 
+  <br />
+  <a href="#PROJECT_NAME">About</a>
+  ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+  ·
+  <a href="SECURITY.md">Security</a>
+  ·
+  <a href="CHANGELOG.md">Changelog</a>
+</div>
+
 # Verifier XRP Indexer
 
 This is an indexer for the XRP blockchain. It is using the Verifier Indexer
