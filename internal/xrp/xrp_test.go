@@ -13,8 +13,10 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-var testBlockNum = uint64(1725668)
-var testBlockTimestamp = uint64(783002761) + xrp.XRPTimeToUTD
+var (
+	testBlockNum       = uint64(13261049)
+	testBlockTimestamp = uint64(1765912553)
+)
 
 // Tests for TestGetLatestBlockInfo, TestGetBlockTimestamp and TestGetBlockResult
 type XrpTestSuite struct {
@@ -61,18 +63,11 @@ func (suite *XrpTestSuite) TestGetBlockTimestamp() {
 func (suite *XrpTestSuite) TestGetBlockResult() {
 	blockResult, err := suite.chainClient.GetBlockResult(suite.ctx, testBlockNum)
 	suite.cancelFunc()
-	suite.NoError(err)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(blockResult)
 
 	suite.Equal(blockResult.Block.GetBlockNumber(), testBlockNum)
 	suite.Equal(blockResult.Block.GetTimestamp(), testBlockTimestamp)
-	suite.Equal(blockResult.Block.Transactions, uint64(10))
-	suite.Equal(blockResult.Block.Hash, "e6ed42458de170a4d95544561c7df715c3a808ead9a3d1d669d187366fe568f6")
-	suite.Equal(blockResult.Transactions[0].Hash, "1f572e746a69edde0c134824491567cc438cfb18a40aa0fd321e8143e70e9064")
-	suite.Equal(blockResult.Transactions[0].BlockNumber, testBlockNum)
-	suite.Equal(blockResult.Transactions[0].Timestamp, testBlockTimestamp)
-	suite.Equal(blockResult.Transactions[0].PaymentReference, "")
-	suite.Equal(blockResult.Transactions[0].IsNativePayment, true)
-	suite.Equal(blockResult.Transactions[0].SourceAddressesRoot, "674fa9a46079864ce1744486bd1a7069794c8aade76b2d0424c4e716fba4f4ef")
 
 	cupaloy.SnapshotT(suite.T(), blockResult)
 }

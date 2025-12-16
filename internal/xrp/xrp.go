@@ -14,6 +14,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/flare-foundation/go-flare-common/pkg/logger"
 	"github.com/flare-foundation/go-flare-common/pkg/merkle"
 	"github.com/flare-foundation/verifier-indexer-framework/pkg/indexer"
 	"github.com/pkg/errors"
@@ -68,10 +69,12 @@ type ledgerResponse struct {
 }
 
 type ledgerResult struct {
-	LedgerIndex uint64    `json:"ledger_index"`
-	LedgerHash  string    `json:"ledger_hash"`
-	Validated   bool      `json:"validated"`
-	Ledger      xrpLedger `json:"ledger"`
+	Status       string    `json:"status"`
+	ErrorMessage string    `json:"error_message,omitempty"`
+	LedgerIndex  uint64    `json:"ledger_index"`
+	LedgerHash   string    `json:"ledger_hash"`
+	Validated    bool      `json:"validated"`
+	Ledger       xrpLedger `json:"ledger"`
 }
 
 type xrpLedger struct {
@@ -172,7 +175,7 @@ func (c xrpClient) GetResponse(ctx context.Context, request xrpRequest) ([]byte,
 func (c xrpClient) GetLedgerResponse(ctx context.Context, params ledgerParams) (*ledgerResponse, error) {
 	request := xrpRequest{
 		Method: "ledger",
-		Params: []interface{}{params},
+		Params: []any{params},
 	}
 
 	resBody, err := c.GetResponse(ctx, request)
@@ -180,10 +183,16 @@ func (c xrpClient) GetLedgerResponse(ctx context.Context, params ledgerParams) (
 		return nil, err
 	}
 
+	logger.Debugf("XRP ledger response: %s", string(resBody))
+
 	var respStruct ledgerResponse
 	err = json.Unmarshal(resBody, &respStruct)
 	if err != nil {
 		return nil, err
+	}
+
+	if respStruct.Result.Status != "success" {
+		return nil, errors.Errorf("error in ledger response: %s %s", respStruct.Result.Status, respStruct.Result.ErrorMessage)
 	}
 
 	return &respStruct, nil
@@ -228,8 +237,9 @@ func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
 	if err != nil {
 		return nil, err
 	}
+
 	if !respStruct.Result.Validated {
-		return nil, errors.New("error block not validated")
+		return nil, errors.Errorf("error block not validated in response: %+v", respStruct)
 	}
 
 	block := Block{
