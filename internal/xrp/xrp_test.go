@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	testBlockNum       = uint64(1725668)
-	testBlockTimestamp = uint64(783002761) + xrp.XRPTimeToUTD
+	testBlockNum       = uint64(13261049)
+	testBlockTimestamp = uint64(1765912553)
 )
 
 // Tests for TestGetLatestBlockInfo, TestGetBlockTimestamp and TestGetBlockResult
@@ -36,7 +36,8 @@ func (suite *XrpTestSuite) SetupTest() {
 	require.NoError(suite.T(), err)
 }
 
-func (suite *XrpTestSuite) TestGetLatestBlockInfo(ctx context.Context) {
+func (suite *XrpTestSuite) TestGetLatestBlockInfo() {
+	ctx := context.Background()
 	blockInfo, err := suite.chainClient.GetLatestBlockInfo(ctx)
 	suite.NoError(err)
 
@@ -47,27 +48,22 @@ func (suite *XrpTestSuite) TestGetLatestBlockInfo(ctx context.Context) {
 	suite.Greater(blockInfo.BlockNumber, testBlockNum)
 }
 
-func (suite *XrpTestSuite) TestGetBlockTimestamp(ctx context.Context) {
+func (suite *XrpTestSuite) TestGetBlockTimestamp() {
+	ctx := context.Background()
 	timestamp, err := suite.chainClient.GetBlockTimestamp(ctx, testBlockNum)
 	suite.NoError(err)
 
 	suite.Equal(timestamp, testBlockTimestamp)
 }
 
-func (suite *XrpTestSuite) TestGetBlockResult(ctx context.Context) {
+func (suite *XrpTestSuite) TestGetBlockResult() {
+	ctx := context.Background()
 	blockResult, err := suite.chainClient.GetBlockResult(ctx, testBlockNum)
-	suite.NoError(err)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(blockResult)
 
 	suite.Equal(blockResult.Block.GetBlockNumber(), testBlockNum)
 	suite.Equal(blockResult.Block.GetTimestamp(), testBlockTimestamp)
-	suite.Equal(blockResult.Block.Transactions, uint64(10))
-	suite.Equal(blockResult.Block.Hash, "e6ed42458de170a4d95544561c7df715c3a808ead9a3d1d669d187366fe568f6")
-	suite.Equal(blockResult.Transactions[0].Hash, "1f572e746a69edde0c134824491567cc438cfb18a40aa0fd321e8143e70e9064")
-	suite.Equal(blockResult.Transactions[0].BlockNumber, testBlockNum)
-	suite.Equal(blockResult.Transactions[0].Timestamp, testBlockTimestamp)
-	suite.Equal(blockResult.Transactions[0].PaymentReference, "")
-	suite.Equal(blockResult.Transactions[0].IsNativePayment, true)
-	suite.Equal(blockResult.Transactions[0].SourceAddressesRoot, "674fa9a46079864ce1744486bd1a7069794c8aade76b2d0424c4e716fba4f4ef")
 
 	cupaloy.SnapshotT(suite.T(), blockResult)
 }
@@ -91,17 +87,20 @@ func (suite *XrpWrongUrlTestSuite) SetupTest() {
 	require.NoError(suite.T(), err)
 }
 
-func (suite *XrpWrongUrlTestSuite) TestGetLatestBlockInfo(ctx context.Context) {
+func (suite *XrpWrongUrlTestSuite) TestGetLatestBlockInfo() {
+	ctx := context.Background()
 	_, err := suite.chainClient.GetLatestBlockInfo(ctx)
 	suite.Error(err)
 }
 
-func (suite *XrpWrongUrlTestSuite) TestGetBlockTimestamp(ctx context.Context) {
+func (suite *XrpWrongUrlTestSuite) TestGetBlockTimestamp() {
+	ctx := context.Background()
 	_, err := suite.chainClient.GetBlockTimestamp(ctx, testBlockNum)
 	suite.Error(err)
 }
 
-func (suite *XrpWrongUrlTestSuite) TestGetBlockResult(ctx context.Context) {
+func (suite *XrpWrongUrlTestSuite) TestGetBlockResult() {
+	ctx := context.Background()
 	_, err := suite.chainClient.GetBlockResult(ctx, testBlockNum)
 	suite.Error(err)
 }
