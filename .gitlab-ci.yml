@@ -28,6 +28,18 @@ build:
     - go mod download
     - go build ./...
 
+build-xrpld:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker build -f Dockerfile.xrpld-ci -t "$CI_REGISTRY_IMAGE/xrpld-ci:latest" .
+    - docker push "$CI_REGISTRY_IMAGE/xrpld-ci:latest"
+
 lint:
   stage: test
   needs: [build]
@@ -43,7 +55,7 @@ test:
   needs: [build]
   cache: !reference [.gocache]
   services:
-    - name: xrpllabsofficial/xrpld:latest
+    - name: $CI_REGISTRY_IMAGE/xrpld-ci:latest
       alias: xrpld
       command:
         - "--standalone"
