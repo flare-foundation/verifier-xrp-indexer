@@ -52,6 +52,7 @@ test:
     XRP_RPC_URL: http://xrpld:5005
   before_script:
     - go install github.com/boumenot/gocover-cobertura@v1.4.0
+    - mkdir /config
     - cp rippled-standalone.cfg /config/rippled.cfg
   script:
     - go mod download
