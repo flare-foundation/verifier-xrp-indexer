@@ -62,12 +62,6 @@ test:
   before_script:
     - go install github.com/boumenot/gocover-cobertura@v1.4.0
   script:
-    - - echo "=== docker ps ==="
-    - docker ps -a
-
-    - echo "=== xrpld logs ==="
-    - docker logs $(docker ps -aq --filter name=xrpld) || true
-
     - echo "=== waiting for rippled ==="
     - |
       for i in {1..30}; do
