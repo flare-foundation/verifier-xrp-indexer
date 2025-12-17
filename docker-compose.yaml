@@ -4,9 +4,6 @@ services:
       context: .
       dockerfile: Dockerfile.xrpld-ci
     container_name: xrpld
-    command:
-      - "--standalone"
-      - "--start"
     ports:
       - "5005:5005"   # JSON-RPC
     restart: unless-stopped

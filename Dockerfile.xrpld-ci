@@ -1,2 +1,3 @@
 FROM xrpllabsofficial/xrpld:latest
 COPY rippled-standalone.cfg /etc/opt/ripple/rippled.cfg
+CMD ["--standalone", "--start"]

@@ -57,14 +57,29 @@ test:
   services:
     - name: $CI_REGISTRY_IMAGE/xrpld-ci:latest
       alias: xrpld
-      command:
-        - "--standalone"
-        - "--start"
   variables:
     XRP_RPC_URL: http://xrpld:5005
   before_script:
     - go install github.com/boumenot/gocover-cobertura@v1.4.0
   script:
+    - - echo "=== docker ps ==="
+    - docker ps -a
+
+    - echo "=== xrpld logs ==="
+    - docker logs $(docker ps -aq --filter name=xrpld) || true
+
+    - echo "=== waiting for rippled ==="
+    - |
+      for i in {1..30}; do
+        if curl -s http://xrpld:5005 \
+          -H "Content-Type: application/json" \
+          -d '{"method":"server_info"}'; then
+          echo "rippled is ready"
+          break
+        fi
+        echo "waiting..."
+        sleep 0.5
+      done
     - go mod download
     - go test -coverpkg=./... -coverprofile=${COVERAGE_FILE} ./...
     - go tool cover -func=${COVERAGE_FILE}
