@@ -96,4 +96,15 @@ file by passing `--config <filepath>` when running the indexer. For example:
 
 ```go
 go run cmd/indexer/main.go --config tests/config_test.toml
+
+### Running the tests
+
+The indexer tests depend on a local rippled instance running in standalone mode.
+The easiest way to create this is to use the `docker-compose.yaml` file provided:
+
+```
+```
+docker compose up -d
+go test ./...
+docker compose down
 ```

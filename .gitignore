@@ -8,3 +8,6 @@ coverage.out
 PROJECT_BUILD_DATE
 PROJECT_COMMIT_HASH
 PROJECT_VERSION
+
+# Test data dir
+data-standalone/
