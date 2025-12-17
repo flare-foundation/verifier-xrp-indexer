@@ -32,7 +32,7 @@ func callRPC(method string, params ...any) (json.RawMessage, error) {
 	}
 
 	resp, err := http.Post(
-		"http://localhost:5005",
+		rpcURL,
 		"application/json",
 		bytes.NewReader(reqBody),
 	)

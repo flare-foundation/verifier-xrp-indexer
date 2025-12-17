@@ -62,18 +62,6 @@ test:
   before_script:
     - go install github.com/boumenot/gocover-cobertura@v1.4.0
   script:
-    - echo "=== waiting for rippled ==="
-    - |
-      for i in {1..30}; do
-        if curl -s http://xrpld:5005 \
-          -H "Content-Type: application/json" \
-          -d '{"method":"server_info"}'; then
-          echo "rippled is ready"
-          break
-        fi
-        echo "waiting..."
-        sleep 0.5
-      done
     - go mod download
     - go test -coverpkg=./... -coverprofile=${COVERAGE_FILE} ./...
     - go tool cover -func=${COVERAGE_FILE}

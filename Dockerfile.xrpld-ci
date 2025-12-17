@@ -1,3 +1,10 @@
 FROM xrpllabsofficial/xrpld:latest
 COPY rippled-standalone.cfg /etc/opt/ripple/rippled.cfg
+RUN apt-get update && apt-get install -y curl
+
 CMD ["--standalone", "--start"]
+
+HEALTHCHECK --interval=1s --timeout=1s --retries=20 \
+  CMD curl -f http://localhost:5005 \
+    -H "Content-Type: application/json" \
+    -d '{"method":"server_info"}' || exit 1
