@@ -1,2 +1,2 @@
 FROM xrpllabsofficial/xrpld:latest
-COPY rippled-standalone.cfg /config/rippled.cfg
+COPY rippled-standalone.cfg /etc/opt/ripple/rippled.cfg
