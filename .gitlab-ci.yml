@@ -48,14 +48,11 @@ test:
       command:
         - "--standalone"
         - "--start"
-        - "--conf"
-        - "/etc/opt/ripple/rippled.cfg"
   variables:
     XRP_RPC_URL: http://xrpld:5005
   before_script:
     - go install github.com/boumenot/gocover-cobertura@v1.4.0
-    - mkdir -p /etc/opt/ripple
-    - cp rippled-standalone.cfg /etc/opt/ripple/rippled.cfg
+    - cp rippled-standalone.cfg /config/rippled.cfg
   script:
     - go mod download
     - go test -coverpkg=./... -coverprofile=${COVERAGE_FILE} ./...
