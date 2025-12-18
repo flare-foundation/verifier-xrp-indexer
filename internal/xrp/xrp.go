@@ -162,9 +162,8 @@ func (c xrpClient) GetResponse(ctx context.Context, request xrpRequest) ([]byte,
 	}
 
 	defer func() {
-		err := resp.Body.Close()
-		if err != nil {
-			logger.Error("error closing response body: %v\n", err)
+		if err := resp.Body.Close(); err != nil {
+			logger.Errorf("error closing response body: %v", err)
 		}
 	}()
 
