@@ -160,6 +160,13 @@ func (c xrpClient) GetResponse(ctx context.Context, request xrpRequest) ([]byte,
 	if err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			logger.Errorf("error closing response body: %v", err)
+		}
+	}()
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New("error response status")
 	}
