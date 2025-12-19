@@ -140,7 +140,7 @@ var getServerState = xrpRequest{
 	Method: "server_info",
 }
 
-func (c xrpClient) GetResponse(ctx context.Context, request xrpRequest) ([]byte, error) {
+func (c xrpClient) getResponse(ctx context.Context, request xrpRequest) ([]byte, error) {
 	getReq, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
@@ -179,13 +179,13 @@ func (c xrpClient) GetResponse(ctx context.Context, request xrpRequest) ([]byte,
 	return resBody, nil
 }
 
-func (c xrpClient) GetLedgerResponse(ctx context.Context, params ledgerParams) (*ledgerResponse, error) {
+func (c xrpClient) getLedgerResponse(ctx context.Context, params ledgerParams) (*ledgerResponse, error) {
 	request := xrpRequest{
 		Method: "ledger",
 		Params: []any{params},
 	}
 
-	resBody, err := c.GetResponse(ctx, request)
+	resBody, err := c.getResponse(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func (c xrpClient) GetLedgerResponse(ctx context.Context, params ledgerParams) (
 }
 
 func (c xrpClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo, error) {
-	respStruct, err := c.GetLedgerResponse(ctx, getLatestParams)
+	respStruct, err := c.getLedgerResponse(ctx, getLatestParams)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +224,7 @@ func (c xrpClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint
 		Expand:       false,
 		OwnerFunds:   false,
 	}
-	respStruct, err := c.GetLedgerResponse(ctx, getBlockParams)
+	respStruct, err := c.getLedgerResponse(ctx, getBlockParams)
 	if err != nil {
 		return 0, err
 	}
@@ -240,7 +240,7 @@ func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
 		Expand:       true,
 		OwnerFunds:   false,
 	}
-	respStruct, err := c.GetLedgerResponse(ctx, getBlockParams)
+	respStruct, err := c.getLedgerResponse(ctx, getBlockParams)
 	if err != nil {
 		return nil, err
 	}
@@ -377,7 +377,7 @@ func sourceAddressesRoot(tx xrpTransaction) (string, error) {
 }
 
 func (c xrpClient) GetServerInfo(ctx context.Context) (string, error) {
-	resBody, err := c.GetResponse(ctx, getServerState)
+	resBody, err := c.getResponse(ctx, getServerState)
 	if err != nil {
 		return "", err
 	}
