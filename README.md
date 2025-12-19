@@ -27,7 +27,7 @@ configuration.
 ## Installation
 
 To install the indexer, you need to have Go installed to the latest version -
-currently 1.23.0.
+currently 1.25.
 
 Now you may install the indexer by running the following command:
 
