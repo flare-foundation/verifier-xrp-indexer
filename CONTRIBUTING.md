@@ -35,9 +35,14 @@ also welcome.
 
 ## Dev environment
 
-The indexer is implemented using Go - it is recommended to use version 1.24 or later. An RPC connection URL and a MySQL database are required in order to run the main indexer. Configuration should be provided via a `config.toml` file - you can copy
-`config.example.toml` and modify to connect to your specific RPC provider and database instance as well as set other
-parameters.
+The indexer is implemented using Go - it is recommended to use version 1.25 or later.
+An RPC connection URL for XRP and a Postgres database are required in order to run
+the main indexer. Public RPC nodes suitable for local development may be found on 
+[public-servers](https://xrpl.org/docs/tutorials/public-servers) although using a
+private connection from a provider such as Quicknode or a self-hosted node is
+recommended for live deployments. Configuration should be provided via a `config.toml`
+file - you can copy `config.example.toml` and modify to connect to your specific RPC
+provider and database instance as well as set other parameters.
 
 ## Linting and formatting
 
