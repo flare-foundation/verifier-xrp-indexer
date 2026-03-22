@@ -44,6 +44,34 @@ recommended for live deployments. Configuration should be provided via a `config
 file - you can copy `config.example.toml` and modify to connect to your specific RPC
 provider and database instance as well as set other parameters.
 
+## Running locally
+
+Start a PostgreSQL instance using the docker compose file from the tests folder:
+
+```
+$ cd tests/
+$ docker compose up postgresdb
+```
+
+In another terminal, run the indexer pointing at the test config:
+
+```
+$ go run ./cmd/indexer --config tests/config_test.toml
+```
+
+### Working with a local framework
+
+If you need to develop against a local version of the
+`verifier-indexer-framework`, add a `replace` directive to `go.mod`:
+
+```
+replace github.com/flare-foundation/verifier-indexer-framework => ../verifier-indexer-framework
+```
+
+Adjust the path to point to your local fork. Run `go mod tidy` after adding the
+directive. Remove it before committing when you're ready to switch back to a
+published version.
+
 ## Linting and formatting
 
 `golangci-lint` is used for linting - install instructions may be found

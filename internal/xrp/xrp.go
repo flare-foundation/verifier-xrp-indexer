@@ -35,10 +35,29 @@ func New(cfg *Config) (indexer.BlockchainClient[Block, Transaction, struct{}], e
 		return nil, errors.New("url must be provided")
 	}
 
+	configPath := configFilePath()
+	if data, err := os.ReadFile(configPath); err == nil {
+		logger.Debugf("Config file (%s):\n%s", configPath, string(data))
+	} else {
+		logger.Debugf("Could not read config file %s: %v", configPath, err)
+	}
+
 	return xrpClient{
 		client: http.DefaultClient,
 		url:    cfg.Url,
 	}, nil
+}
+
+func configFilePath() string {
+	for i, arg := range os.Args {
+		if arg == "--config" && i+1 < len(os.Args) {
+			return os.Args[i+1]
+		}
+	}
+	if path, ok := os.LookupEnv("CONFIG_FILE"); ok {
+		return path
+	}
+	return "config.toml"
 }
 
 func (c *Config) ApplyEnvOverrides() {
@@ -88,6 +107,7 @@ type xrpTransaction struct {
 	TransactionType string                         `json:"TransactionType"`
 	Amount          json.RawMessage                `json:"Amount"`
 	MetaData        json.RawMessage                `json:"metaData"`
+	DestinationTag  *uint32                        `json:"DestinationTag"`
 }
 
 type xrpAmount struct {
@@ -190,8 +210,6 @@ func (c xrpClient) getLedgerResponse(ctx context.Context, params ledgerParams) (
 		return nil, err
 	}
 
-	logger.Debugf("XRP ledger response: %s", string(resBody))
-
 	var respStruct ledgerResponse
 	err = json.Unmarshal(resBody, &respStruct)
 	if err != nil {
@@ -257,6 +275,9 @@ func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
 	}
 
 	transactions := make([]Transaction, len(respStruct.Result.Ledger.Transactions))
+
+	logger.Debugf("Processing ledger %d with %d transactions", blockNum, len(respStruct.Result.Ledger.Transactions))
+
 	for i := range transactions {
 		var tx xrpTransaction
 		err = json.Unmarshal([]byte(respStruct.Result.Ledger.Transactions[i]), &tx)
@@ -265,10 +286,12 @@ func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
 		}
 
 		transactions[i] = Transaction{
-			Hash:        strings.ToLower(tx.Hash),
-			BlockNumber: respStruct.Result.LedgerIndex,
-			Timestamp:   respStruct.Result.Ledger.CloseTime + XRPTimeToUTD,
-			Response:    string(respStruct.Result.Ledger.Transactions[i]),
+			Hash:              strings.ToLower(tx.Hash),
+			BlockNumber:       respStruct.Result.LedgerIndex,
+			Timestamp:         respStruct.Result.Ledger.CloseTime + XRPTimeToUTD,
+			Response:          string(respStruct.Result.Ledger.Transactions[i]),
+			FirstMemoDataHash: firstMemoDataHash(tx),
+			DestinationTag:    tx.DestinationTag,
 		}
 
 		// case-insensitive check for transaction type
@@ -284,6 +307,19 @@ func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
 	}
 
 	return &indexer.BlockResult[Block, Transaction, struct{}]{Block: block, Transactions: transactions}, nil
+}
+
+func firstMemoDataHash(tx xrpTransaction) string {
+	if len(tx.Memos) > 0 {
+		if memo, ok := tx.Memos[0]["Memo"]; ok {
+			if memoData, ok := memo["MemoData"]; ok && memoData != "" {
+				hash := crypto.Keccak256Hash([]byte(memoData))
+				return strings.ToLower(hash.Hex()[2:])
+			}
+		}
+	}
+
+	return ""
 }
 
 func paymentReference(tx xrpTransaction) string {
