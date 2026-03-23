@@ -35,29 +35,10 @@ func New(cfg *Config) (indexer.BlockchainClient[Block, Transaction, struct{}], e
 		return nil, errors.New("url must be provided")
 	}
 
-	configPath := configFilePath()
-	if data, err := os.ReadFile(configPath); err == nil {
-		logger.Debugf("Config file (%s):\n%s", configPath, string(data))
-	} else {
-		logger.Debugf("Could not read config file %s: %v", configPath, err)
-	}
-
 	return xrpClient{
 		client: http.DefaultClient,
 		url:    cfg.Url,
 	}, nil
-}
-
-func configFilePath() string {
-	for i, arg := range os.Args {
-		if arg == "--config" && i+1 < len(os.Args) {
-			return os.Args[i+1]
-		}
-	}
-	if path, ok := os.LookupEnv("CONFIG_FILE"); ok {
-		return path
-	}
-	return "config.toml"
 }
 
 func (c *Config) ApplyEnvOverrides() {
@@ -107,6 +88,9 @@ type xrpTransaction struct {
 	TransactionType string                         `json:"TransactionType"`
 	Amount          json.RawMessage                `json:"Amount"`
 	MetaData        json.RawMessage                `json:"metaData"`
+	Sequence        uint64                         `json:"Sequence"`
+	TicketSequence  uint64                         `json:"TicketSequence"`
+	Account         string                         `json:"Account"`
 	DestinationTag  *uint32                        `json:"DestinationTag"`
 }
 
@@ -292,6 +276,9 @@ func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
 			Response:          string(respStruct.Result.Ledger.Transactions[i]),
 			FirstMemoDataHash: firstMemoDataHash(tx),
 			DestinationTag:    tx.DestinationTag,
+			SourceAddress:     tx.Account,
+			Sequence:          tx.Sequence,
+			TicketSequence:    tx.TicketSequence,
 		}
 
 		// case-insensitive check for transaction type
@@ -301,6 +288,9 @@ func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
 		}
 
 		transactions[i].SourceAddressesRoot, err = sourceAddressesRoot(tx)
+		transactions[i].SourceAddress = tx.Account
+		transactions[i].Sequence = tx.Sequence
+		transactions[i].TicketSequence = tx.TicketSequence
 		if err != nil {
 			return nil, err
 		}

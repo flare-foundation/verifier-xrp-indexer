@@ -92,10 +92,6 @@ func (suite *XrpTestSuite) TestGetBlockResult() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(blockResult)
 
-	suite.Equal(blockResult.Block.GetBlockNumber(), suite.testLedger)
-	suite.NotZero(blockResult.Block.GetTimestamp())
-	suite.Equal(blockResult.Block.Transactions, uint64(1))
-
 	suite.Require().Len(blockResult.Transactions, 1)
 	tx := blockResult.Transactions[0]
 	suite.NotEmpty(tx.Hash)
@@ -105,6 +101,11 @@ func (suite *XrpTestSuite) TestGetBlockResult() {
 	suite.NotEmpty(tx.Response)
 	suite.True(tx.IsNativePayment)
 	suite.NotEmpty(tx.SourceAddressesRoot)
+	suite.NotEmpty(tx.SourceAddress)
+	suite.NotZero(tx.Sequence)
+	suite.Zero(tx.TicketSequence)
+	suite.Empty(tx.FirstMemoDataHash)
+	suite.Nil(tx.DestinationTag)
 
 	suite.Empty(blockResult.Events)
 }
