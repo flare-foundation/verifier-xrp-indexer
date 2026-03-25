@@ -3,6 +3,7 @@ package xrp
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -303,7 +304,11 @@ func firstMemoDataHash(tx xrpTransaction) string {
 	if len(tx.Memos) > 0 {
 		if memo, ok := tx.Memos[0]["Memo"]; ok {
 			if memoData, ok := memo["MemoData"]; ok && memoData != "" {
-				hash := crypto.Keccak256Hash([]byte(memoData))
+				decoded, err := hex.DecodeString(memoData)
+				if err != nil {
+					return ""
+				}
+				hash := crypto.Keccak256Hash(decoded)
 				return strings.ToLower(hash.Hex()[2:])
 			}
 		}

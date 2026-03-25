@@ -4,17 +4,23 @@ password = "password"
 db_name = "flare_xrp_indexer"
 port = 5432
 drop_table_at_start = false
-history_drop = 3600
+history_drop = 13600
 history_drop_frequency = 600
 
 [indexer]
 confirmations = 1
 max_block_range = 100
-max_concurrency = 10
-start_block_number = 700000
+max_concurrency = 1
+start_block_number = 100000000
+# start_block_number = 10172243
+# end_block_number = 10172442
 
 [blockchain]
-url = "https://s.altnet.rippletest.net:51234"
+url = "https://s1.ripple.com:51234"
+# url = "https://xrplcluster.com"
+# Testnet
+# url = "https://s.altnet.rippletest.net:51234"
+# url = "https://testnet.xrpl-labs.com"
 
 [timeout]
 request_timeout_millis = 3000
