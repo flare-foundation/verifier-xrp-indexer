@@ -31,26 +31,27 @@ type Config struct {
 	Url string `toml:"url"`
 }
 
-func New(cfg *Config) (indexer.BlockchainClient[Block, Transaction, struct{}], error) {
+type xrpClient struct {
+	client *http.Client
+	url    string
+}
+
+func New(cfg *Config) (indexer.BlockchainClient[*Block, Transaction, struct{}], error) {
 	if cfg.Url == "" {
 		return nil, errors.New("url must be provided")
 	}
 
-	return xrpClient{
+	return &xrpClient{
 		client: http.DefaultClient,
 		url:    cfg.Url,
 	}, nil
 }
 
-func (c *Config) ApplyEnvOverrides() {
+func (c *Config) ApplyEnvOverrides() error {
 	if url, ok := os.LookupEnv("XRP_URL"); ok {
 		c.Url = url
 	}
-}
-
-type xrpClient struct {
-	client *http.Client
-	url    string
+	return nil
 }
 
 type xrpRequest struct {
@@ -145,14 +146,14 @@ var getServerState = xrpRequest{
 	Method: "server_info",
 }
 
-func (c xrpClient) getResponse(ctx context.Context, request xrpRequest) ([]byte, error) {
+func (c *xrpClient) getResponse(ctx context.Context, request xrpRequest) ([]byte, error) {
 	getReq, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
 
 	buf := bytes.NewBuffer(getReq)
-	req, err := http.NewRequest("POST", c.url, buf)
+	req, err := http.NewRequest(http.MethodPost, c.url, buf)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +185,7 @@ func (c xrpClient) getResponse(ctx context.Context, request xrpRequest) ([]byte,
 	return resBody, nil
 }
 
-func (c xrpClient) getLedgerResponse(ctx context.Context, params ledgerParams) (*ledgerResponse, error) {
+func (c *xrpClient) getLedgerResponse(ctx context.Context, params ledgerParams) (*ledgerResponse, error) {
 	request := xrpRequest{
 		Method: "ledger",
 		Params: []any{params},
@@ -208,7 +209,7 @@ func (c xrpClient) getLedgerResponse(ctx context.Context, params ledgerParams) (
 	return &respStruct, nil
 }
 
-func (c xrpClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo, error) {
+func (c *xrpClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo, error) {
 	respStruct, err := c.getLedgerResponse(ctx, getLatestParams)
 	if err != nil {
 		return nil, err
@@ -220,7 +221,7 @@ func (c xrpClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo, 
 	}, nil
 }
 
-func (c xrpClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint64, error) {
+func (c *xrpClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint64, error) {
 	getBlockParams := ledgerParams{
 		LedgerIndex:  strconv.Itoa(int(blockNum)),
 		Transactions: false,
@@ -235,8 +236,7 @@ func (c xrpClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint
 	return respStruct.Result.Ledger.CloseTime + XRPTimeToUTD, nil
 }
 
-func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
-) (*indexer.BlockResult[Block, Transaction, struct{}], error) {
+func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*indexer.BlockResult[*Block, Transaction, struct{}], error) {
 	getBlockParams := ledgerParams{
 		LedgerIndex:  strconv.Itoa(int(blockNum)),
 		Transactions: true,
@@ -252,7 +252,7 @@ func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
 		return nil, errors.Errorf("error block not validated in response: %+v", respStruct)
 	}
 
-	block := Block{
+	block := &Block{
 		Hash:         strings.ToLower(respStruct.Result.LedgerHash),
 		BlockNumber:  respStruct.Result.LedgerIndex,
 		Timestamp:    respStruct.Result.Ledger.CloseTime + XRPTimeToUTD,
@@ -297,7 +297,7 @@ func (c xrpClient) GetBlockResult(ctx context.Context, blockNum uint64,
 		}
 	}
 
-	return &indexer.BlockResult[Block, Transaction, struct{}]{Block: block, Transactions: transactions}, nil
+	return &indexer.BlockResult[*Block, Transaction, struct{}]{Block: block, Transactions: transactions}, nil
 }
 
 func firstMemoDataHash(tx xrpTransaction) string {

@@ -5,10 +5,8 @@
     <img src="https://content.flare.network/Flare-2.svg" width="300" alt="Flare Logo" />
   </a>
   <br />
-  indexer for the XRP blockchain 
+  Indexer for the XRP blockchain 
   <br />
-  <a href="#PROJECT_NAME">About</a>
-  ·
   <a href="CONTRIBUTING.md">Contributing</a>
   ·
   <a href="SECURITY.md">Security</a>
@@ -18,16 +16,14 @@
 
 # Verifier XRP Indexer
 
-This is an indexer for the XRP blockchain. It is using the Verifier Indexer
-Framework (https://github.com/flare-foundation/verifier-indexer-framework). It
-collects Blocks and Transactions from the XRP blockchain. The indexer is
-configured via a configuration file - see `config.example.toml` for an example
-configuration.
+This is an indexer for the XRP blockchain.
+It is using the [Verifier Indexer Framework](https://github.com/flare-foundation/verifier-indexer-framework).
+It collects Blocks and Transactions from the XRP blockchain.
+The indexer is configured via a configuration file - see `config.example.toml` for an example configuration.
 
 ## Installation
 
-To install the indexer, you need to have Go installed to the latest version -
-currently 1.25.
+To install the indexer, you need to have Go installed to the latest version - currently 1.25.5.
 
 Now you may install the indexer by running the following command:
 
@@ -43,8 +39,8 @@ This will install the `indexer` command globally.
 
 #### Database
 
-To run the indexer a PostgreSQL database needs to be deployed. An example database is
-provided as docker image in `tests` directory which can be used with
+To run the indexer a PostgreSQL database needs to be deployed.
+An example database is provided as docker image in `tests` directory which can be used with
 
 ```bash
 docker compose up postgresdb
@@ -87,24 +83,36 @@ console = true
 
 ### Running the code
 
-Assuming that the indexer was installed globally you can use `indexer` command to
-run it. Alternatively you can use `go run ./cmd/indexer` to build and run the binary.
+Assuming that the indexer was installed globally you can use `indexer` command to run it.
+Alternatively you can use `go run ./cmd/indexer` to build and run the binary.
 
-By default the indexer will look for a configuration file named `config.toml`
-in the current working directory. You can specify a different configuration
-file by passing `--config <filepath>` when running the indexer. For example:
+By default the indexer will look for a configuration file named `config.toml` in the current working directory.
+You can specify a different configuration file by passing `--config <filepath>` when running the indexer.
+For example:
 
-```go
+```bash
 go run cmd/indexer/main.go --config tests/config_test.toml
+```
 
 ### Running the tests
 
 The indexer tests depend on a local rippled instance running in standalone mode.
 The easiest way to create this is to use the `docker-compose.yaml` file provided:
 
-```
-```
+Start the rippled instance:
+
+```bash
 docker compose up -d
+```
+
+Run the tests:
+
+```bash
 go test ./...
+```
+
+Stop the rippled instance:
+
+```bash
 docker compose down
 ```

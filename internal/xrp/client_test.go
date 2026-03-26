@@ -61,6 +61,8 @@ type Wallet struct {
 }
 
 func createWallet(t *testing.T) Wallet {
+	t.Helper()
+
 	raw, err := callRPC("wallet_propose")
 	require.NoError(t, err)
 
@@ -79,12 +81,15 @@ type statusResponse struct {
 }
 
 func requireSuccess(t *testing.T, rsp json.RawMessage) {
+	t.Helper()
+
 	var status statusResponse
 	require.NoError(t, json.Unmarshal(rsp, &status))
 	require.Equal(t, "success", status.Status)
 }
 
 func fundAccount(t *testing.T, dest string, drops string) {
+	t.Helper()
 	rsp, err := callRPC("submit", map[string]any{
 		"tx_json": map[string]any{
 			"TransactionType": "Payment",
@@ -100,6 +105,7 @@ func fundAccount(t *testing.T, dest string, drops string) {
 }
 
 func submitPayment(t *testing.T, from Wallet, to string, drops string) {
+	t.Helper()
 	rsp, err := callRPC("submit", map[string]any{
 		"tx_json": map[string]any{
 			"TransactionType": "Payment",
@@ -119,6 +125,8 @@ type currentLedgerResponse struct {
 }
 
 func getValidatedLedgerIndex(t *testing.T) uint64 {
+	t.Helper()
+
 	params := map[string]any{
 		"ledger_index": "validated",
 	}
@@ -133,25 +141,24 @@ func getValidatedLedgerIndex(t *testing.T) uint64 {
 }
 
 func awaitReady(t *testing.T) {
-	require.Eventually(
-		t,
-		func() bool {
-			raw, err := callRPC("server_info")
-			if err != nil {
-				return false
-			}
+	t.Helper()
+	require.Eventually(t, func() bool {
+		raw, err := callRPC("server_info")
+		if err != nil {
+			return false
+		}
 
-			var status statusResponse
-			if err := json.Unmarshal(raw, &status); err != nil {
-				return false
-			}
+		var status statusResponse
+		if err := json.Unmarshal(raw, &status); err != nil {
+			return false
+		}
 
-			if status.Status != "success" {
-				return false
-			}
+		if status.Status != "success" {
+			return false
+		}
 
-			return true
-		},
+		return true
+	},
 		30*time.Second, // Wait for up to 30 seconds
 		time.Second,    // Check every second
 	)

@@ -2,13 +2,6 @@ package xrp
 
 import "github.com/flare-foundation/verifier-indexer-framework/pkg/database"
 
-type Block struct {
-	Hash         string `gorm:"primaryKey;type:varchar(64)"`
-	BlockNumber  uint64 `gorm:"index"`
-	Timestamp    uint64 `gorm:"index"`
-	Transactions uint64
-}
-
 type Transaction struct {
 	Hash                string `gorm:"primaryKey;type:varchar(64)"`
 	BlockNumber         uint64 `gorm:"index"`
@@ -24,19 +17,30 @@ type Transaction struct {
 	DestinationTag      *uint32 `gorm:"index;default:null"`
 }
 
-func (b Block) GetBlockNumber() uint64 {
-	return b.BlockNumber
-}
-
-func (b Block) GetTimestamp() uint64 {
-	return b.Timestamp
-}
-
-func (b Block) TimestampField() string {
+func (t *Transaction) TimestampField() string {
 	return "timestamp"
 }
 
-func (b Block) HistoryDropOrder() []database.Deletable {
+type Block struct {
+	Hash         string `gorm:"primaryKey;type:varchar(64)"`
+	BlockNumber  uint64 `gorm:"index"`
+	Timestamp    uint64 `gorm:"index"`
+	Transactions uint64
+}
+
+func (b *Block) GetBlockNumber() uint64 {
+	return b.BlockNumber
+}
+
+func (b *Block) GetTimestamp() uint64 {
+	return b.Timestamp
+}
+
+func (b *Block) TimestampField() string {
+	return "timestamp"
+}
+
+func (b *Block) HistoryDropOrder() []database.Deletable {
 	var block Block
 	var tx Transaction
 
@@ -45,8 +49,4 @@ func (b Block) HistoryDropOrder() []database.Deletable {
 		&tx,
 		&block,
 	}
-}
-
-func (t Transaction) TimestampField() string {
-	return "timestamp"
 }

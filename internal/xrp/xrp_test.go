@@ -27,7 +27,7 @@ func init() {
 // Tests for TestGetLatestBlockInfo, TestGetBlockTimestamp and TestGetBlockResult
 type XrpTestSuite struct {
 	suite.Suite
-	chainClient indexer.BlockchainClient[xrp.Block, xrp.Transaction, struct{}]
+	chainClient indexer.BlockchainClient[*xrp.Block, xrp.Transaction, struct{}]
 	testLedger  uint64
 }
 
@@ -114,7 +114,7 @@ func (suite *XrpTestSuite) TestGetBlockResult() {
 // with wrong urls in client
 type XrpWrongUrlTestSuite struct {
 	suite.Suite
-	chainClient indexer.BlockchainClient[xrp.Block, xrp.Transaction, struct{}]
+	chainClient indexer.BlockchainClient[*xrp.Block, xrp.Transaction, struct{}]
 }
 
 func TestXrpWrongUrlTestSuite(t *testing.T) {
@@ -126,7 +126,7 @@ func (suite *XrpWrongUrlTestSuite) SetupTest() {
 
 	var err error
 	suite.chainClient, err = xrp.New(&cfg)
-	require.NoError(suite.T(), err)
+	require.NoError(suite.T(), err, "setup")
 }
 
 func (suite *XrpWrongUrlTestSuite) TestGetLatestBlockInfo() {
