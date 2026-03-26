@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -18,13 +19,13 @@ import (
 	"github.com/flare-foundation/go-flare-common/pkg/logger"
 	"github.com/flare-foundation/go-flare-common/pkg/merkle"
 	"github.com/flare-foundation/verifier-indexer-framework/pkg/indexer"
-	"github.com/pkg/errors"
 )
 
 const (
-	xrpCurrency  = "XRP"
-	XRPTimeToUTD = uint64(946684800)
-	paymentType  = "Payment"
+	xrpCurrency = "XRP"
+	// XRPTimeOffset is the seconds between the XRP epoch (Jan 1 2000) and the Unix epoch (Jan 1 1970).
+	XRPTimeOffset = uint64(946684800)
+	paymentType   = "Payment"
 )
 
 type Config struct {
@@ -149,13 +150,13 @@ var getServerState = xrpRequest{
 func (c *xrpClient) getResponse(ctx context.Context, request xrpRequest) ([]byte, error) {
 	getReq, err := json.Marshal(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("marshal request: %w", err)
 	}
 
 	buf := bytes.NewBuffer(getReq)
 	req, err := http.NewRequest(http.MethodPost, c.url, buf)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create request: %w", err)
 	}
 
 	req.Header.Set("accept", "application/json")
@@ -164,7 +165,7 @@ func (c *xrpClient) getResponse(ctx context.Context, request xrpRequest) ([]byte
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("send request: %w", err)
 	}
 
 	defer func() {
@@ -174,12 +175,12 @@ func (c *xrpClient) getResponse(ctx context.Context, request xrpRequest) ([]byte
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("error response status")
+		return nil, fmt.Errorf("unexpected response status: %d", resp.StatusCode)
 	}
 
 	resBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read response body: %w", err)
 	}
 
 	return resBody, nil
@@ -193,17 +194,18 @@ func (c *xrpClient) getLedgerResponse(ctx context.Context, params ledgerParams) 
 
 	resBody, err := c.getResponse(ctx, request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ledger request: %w", err)
 	}
 
 	var respStruct ledgerResponse
 	err = json.Unmarshal(resBody, &respStruct)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshal ledger response: %w", err)
 	}
 
 	if respStruct.Result.Status != "success" {
-		return nil, errors.Errorf("error in ledger response: %s %s", respStruct.Result.Status, respStruct.Result.ErrorMessage)
+		logger.Debugf("ledger RPC error detail: status=%s message=%s", respStruct.Result.Status, respStruct.Result.ErrorMessage)
+		return nil, fmt.Errorf("ledger RPC request failed (status: %s)", respStruct.Result.Status)
 	}
 
 	return &respStruct, nil
@@ -217,7 +219,7 @@ func (c *xrpClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo,
 
 	return &indexer.BlockInfo{
 		BlockNumber: respStruct.Result.LedgerIndex,
-		Timestamp:   respStruct.Result.Ledger.CloseTime + XRPTimeToUTD,
+		Timestamp:   respStruct.Result.Ledger.CloseTime + XRPTimeOffset,
 	}, nil
 }
 
@@ -233,7 +235,7 @@ func (c *xrpClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uin
 		return 0, err
 	}
 
-	return respStruct.Result.Ledger.CloseTime + XRPTimeToUTD, nil
+	return respStruct.Result.Ledger.CloseTime + XRPTimeOffset, nil
 }
 
 func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*indexer.BlockResult[*Block, Transaction, struct{}], error) {
@@ -249,13 +251,13 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 	}
 
 	if !respStruct.Result.Validated {
-		return nil, errors.Errorf("error block not validated in response: %+v", respStruct)
+		return nil, fmt.Errorf("block not validated in response: %+v", respStruct)
 	}
 
 	block := &Block{
 		Hash:         strings.ToLower(respStruct.Result.LedgerHash),
 		BlockNumber:  respStruct.Result.LedgerIndex,
-		Timestamp:    respStruct.Result.Ledger.CloseTime + XRPTimeToUTD,
+		Timestamp:    respStruct.Result.Ledger.CloseTime + XRPTimeOffset,
 		Transactions: uint64(len(respStruct.Result.Ledger.Transactions)),
 	}
 
@@ -267,13 +269,13 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 		var tx xrpTransaction
 		err = json.Unmarshal([]byte(respStruct.Result.Ledger.Transactions[i]), &tx)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unmarshal transaction %d: %w", i, err)
 		}
 
 		transactions[i] = Transaction{
 			Hash:              strings.ToLower(tx.Hash),
 			BlockNumber:       respStruct.Result.LedgerIndex,
-			Timestamp:         respStruct.Result.Ledger.CloseTime + XRPTimeToUTD,
+			Timestamp:         respStruct.Result.Ledger.CloseTime + XRPTimeOffset,
 			Response:          string(respStruct.Result.Ledger.Transactions[i]),
 			FirstMemoDataHash: firstMemoDataHash(tx),
 			DestinationTag:    tx.DestinationTag,
@@ -285,7 +287,11 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 		// case-insensitive check for transaction type
 		if strings.EqualFold(tx.TransactionType, paymentType) {
 			transactions[i].PaymentReference = paymentReference(tx)
-			transactions[i].IsNativePayment = isNativePayment(tx)
+			isNative, err := isNativePayment(tx)
+			if err != nil {
+				return nil, fmt.Errorf("isNativePayment: %w", err)
+			}
+			transactions[i].IsNativePayment = isNative
 		}
 
 		transactions[i].SourceAddressesRoot, err = sourceAddressesRoot(tx)
@@ -293,7 +299,7 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 		transactions[i].Sequence = tx.Sequence
 		transactions[i].TicketSequence = tx.TicketSequence
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("source addresses root for tx %s: %w", tx.Hash, err)
 		}
 	}
 
@@ -301,7 +307,7 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 }
 
 func firstMemoDataHash(tx xrpTransaction) string {
-	if len(tx.Memos) > 0 {
+	if len(tx.Memos) > 0 && tx.Memos[0] != nil {
 		if memo, ok := tx.Memos[0]["Memo"]; ok {
 			if memoData, ok := memo["MemoData"]; ok && memoData != "" {
 				decoded, err := hex.DecodeString(memoData)
@@ -318,7 +324,7 @@ func firstMemoDataHash(tx xrpTransaction) string {
 }
 
 func paymentReference(tx xrpTransaction) string {
-	if len(tx.Memos) == 1 {
+	if len(tx.Memos) == 1 && tx.Memos[0] != nil {
 		if memo, ok := tx.Memos[0]["Memo"]; ok {
 			if memoData, ok := memo["MemoData"]; ok {
 				if len(memoData) == 64 {
@@ -331,19 +337,27 @@ func paymentReference(tx xrpTransaction) string {
 	return ""
 }
 
-func isNativePayment(tx xrpTransaction) bool {
-	var amountStr string
-	err := json.Unmarshal(tx.Amount, &amountStr)
-	if err == nil {
-		_, err = strconv.Atoi(amountStr)
-		if err == nil {
-			return true
-		}
+func isNativePayment(tx xrpTransaction) (bool, error) {
+	if len(tx.Amount) == 0 {
+		return false, errors.New("empty Amount field")
 	}
-	var amountStruct xrpAmount
-	err = json.Unmarshal(tx.Amount, &amountStruct)
 
-	return err == nil && amountStruct.Currency == xrpCurrency
+	// XRP native amounts are JSON strings of digits ("1000000").
+	// Token amounts are JSON objects. Branching on the first byte avoids a redundant unmarshal.
+	if tx.Amount[0] == '"' {
+		var amountStr string
+		if err := json.Unmarshal(tx.Amount, &amountStr); err != nil {
+			return false, fmt.Errorf("unmarshal amount string: %w", err)
+		}
+		_, err := strconv.Atoi(amountStr)
+		return err == nil, nil
+	}
+
+	var amountObj xrpAmount
+	if err := json.Unmarshal(tx.Amount, &amountObj); err != nil {
+		return false, fmt.Errorf("unmarshal amount object: %w", err)
+	}
+	return amountObj.Currency == xrpCurrency, nil
 }
 
 func sourceAddressesRoot(tx xrpTransaction) (string, error) {
@@ -351,7 +365,7 @@ func sourceAddressesRoot(tx xrpTransaction) (string, error) {
 
 	err := json.Unmarshal(tx.MetaData, &meta)
 	if err != nil {
-		return "", errors.New("unable to unmarshall source addresses")
+		return "", errors.New("unable to unmarshal source addresses")
 	}
 
 	sourceAddresses := make([]common.Hash, 0)
@@ -367,11 +381,11 @@ func sourceAddressesRoot(tx xrpTransaction) (string, error) {
 		if len(modifiedNode.FinalFields.Balance) > 0 {
 			err = json.Unmarshal(modifiedNode.FinalFields.Balance, &balance)
 			if err != nil {
-				return "", errors.Wrap(err, "unable to unmarshall final balance")
+				return "", fmt.Errorf("unable to unmarshal final balance: %w", err)
 			}
 			finalVal, check = new(big.Int).SetString(balance, 10)
 			if !check {
-				return "", errors.New("unable to parse balance")
+				return "", errors.New("unable to parse final balance")
 			}
 		}
 
@@ -379,11 +393,11 @@ func sourceAddressesRoot(tx xrpTransaction) (string, error) {
 		if len(modifiedNode.PreviousFields.Balance) > 0 {
 			err = json.Unmarshal(modifiedNode.PreviousFields.Balance, &balance)
 			if err != nil {
-				return "", errors.Wrap(err, "unable to unmarshall previous balance")
+				return "", fmt.Errorf("unable to unmarshal previous balance: %w", err)
 			}
 			previousVal, check = new(big.Int).SetString(balance, 10)
 			if !check {
-				return "", errors.New("unable to parse balance")
+				return "", errors.New("unable to parse previous balance")
 			}
 		}
 
@@ -398,7 +412,7 @@ func sourceAddressesRoot(tx xrpTransaction) (string, error) {
 		merkleTree := merkle.Build(sourceAddresses, false)
 		root, err := merkleTree.Root()
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("build merkle root: %w", err)
 		}
 
 		return strings.ToLower(root.Hex()[2:]), nil
@@ -407,16 +421,16 @@ func sourceAddressesRoot(tx xrpTransaction) (string, error) {
 	return "", nil
 }
 
-func (c xrpClient) GetServerInfo(ctx context.Context) (string, error) {
+func (c *xrpClient) GetServerInfo(ctx context.Context) (string, error) {
 	resBody, err := c.getResponse(ctx, getServerState)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("server info request: %w", err)
 	}
 
 	var respStruct serverInfoResponse
 	err = json.Unmarshal(resBody, &respStruct)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("unmarshal server info: %w", err)
 	}
 
 	info := respStruct.Result.Info

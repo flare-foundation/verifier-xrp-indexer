@@ -7,10 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/flare-foundation/verifier-indexer-framework/pkg/indexer"
 	"github.com/flare-foundation/verifier-xrp-indexer/internal/xrp"
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
 const defaultRPCURL = "http://localhost:5005"
@@ -24,147 +22,99 @@ func init() {
 	}
 }
 
-// Tests for TestGetLatestBlockInfo, TestGetBlockTimestamp and TestGetBlockResult
-type XrpTestSuite struct {
-	suite.Suite
-	chainClient indexer.BlockchainClient[*xrp.Block, xrp.Transaction, struct{}]
-	testLedger  uint64
-}
-
-func TestXrpTestSuite(t *testing.T) {
-	suite.Run(t, &XrpTestSuite{})
-}
-
-func (suite *XrpTestSuite) SetupSuite() {
-	t := suite.T()
-
+func TestXrp(t *testing.T) {
 	awaitReady(t)
 
-	// 1. Create wallets
 	source := createWallet(t)
 	dest := createWallet(t)
 
-	// 2. Fund source
 	fundAccount(t, source.Account, "100000000")
 	_, err := callRPC("ledger_accept")
-	suite.Require().NoError(err)
+	require.NoError(t, err)
 
-	// 3. Submit payment
 	submitPayment(t, source, dest.Account, "1000000")
 	_, err = callRPC("ledger_accept")
-	suite.Require().NoError(err)
+	require.NoError(t, err)
 
-	// 4. Query ledger index
 	currentLedgerIndex := getValidatedLedgerIndex(t)
 	t.Log("ledger_current_index:", currentLedgerIndex)
-	suite.testLedger = currentLedgerIndex - 1
+	testLedger := currentLedgerIndex - 1
 
-	cfg := xrp.Config{Url: rpcURL}
+	chainClient, err := xrp.New(&xrp.Config{Url: rpcURL})
+	require.NoError(t, err)
 
-	chainClient, err := xrp.New(&cfg)
-	suite.Require().NoError(err)
+	t.Run("GetLatestBlockInfo", func(t *testing.T) {
+		blockInfo, err := chainClient.GetLatestBlockInfo(context.Background())
+		require.NoError(t, err)
 
-	suite.chainClient = chainClient
+		timeNow := uint64(time.Now().Unix())
+		require.Greater(t, timeNow, blockInfo.Timestamp-10)
+		require.Greater(t, blockInfo.Timestamp+60, timeNow)
+		require.GreaterOrEqual(t, blockInfo.BlockNumber, testLedger)
+	})
+
+	t.Run("GetBlockTimestamp", func(t *testing.T) {
+		timestamp, err := chainClient.GetBlockTimestamp(context.Background(), testLedger)
+		require.NoError(t, err)
+		require.NotZero(t, timestamp)
+	})
+
+	t.Run("GetBlockResult", func(t *testing.T) {
+		blockResult, err := chainClient.GetBlockResult(context.Background(), testLedger)
+		require.NoError(t, err)
+		require.NotNil(t, blockResult)
+
+		require.Equal(t, testLedger, blockResult.Block.GetBlockNumber())
+		require.NotZero(t, blockResult.Block.GetTimestamp())
+		require.Equal(t, uint64(1), blockResult.Block.Transactions)
+
+		require.Len(t, blockResult.Transactions, 1)
+		tx := blockResult.Transactions[0]
+		require.NotEmpty(t, tx.Hash)
+		require.Equal(t, testLedger, tx.BlockNumber)
+		require.NotZero(t, tx.Timestamp)
+		require.Empty(t, tx.PaymentReference)
+		require.NotEmpty(t, tx.Response)
+		require.True(t, tx.IsNativePayment)
+		require.NotEmpty(t, tx.SourceAddressesRoot)
+
+		require.Empty(t, blockResult.Events)
+	})
 }
 
-func (suite *XrpTestSuite) TestGetLatestBlockInfo() {
-	ctx := context.Background()
-	blockInfo, err := suite.chainClient.GetLatestBlockInfo(ctx)
-	suite.NoError(err)
+func TestWrongURL(t *testing.T) {
+	chainClient, err := xrp.New(&xrp.Config{Url: "https://s.altnet.rippletest.net:512345"}) // wrong port
+	require.NoError(t, err)
 
-	timeNow := uint64(time.Now().Unix())
-	suite.Greater(timeNow, blockInfo.Timestamp-10)
-	suite.Greater(blockInfo.Timestamp+60, timeNow)
+	t.Run("GetLatestBlockInfo", func(t *testing.T) {
+		_, err := chainClient.GetLatestBlockInfo(context.Background())
+		require.Error(t, err)
+	})
 
-	suite.GreaterOrEqual(blockInfo.BlockNumber, suite.testLedger)
+	t.Run("GetBlockTimestamp", func(t *testing.T) {
+		_, err := chainClient.GetBlockTimestamp(context.Background(), 1)
+		require.Error(t, err)
+	})
+
+	t.Run("GetBlockResult", func(t *testing.T) {
+		_, err := chainClient.GetBlockResult(context.Background(), 1)
+		require.Error(t, err)
+	})
 }
 
-func (suite *XrpTestSuite) TestGetBlockTimestamp() {
-	ctx := context.Background()
-	timestamp, err := suite.chainClient.GetBlockTimestamp(ctx, suite.testLedger)
-	suite.Require().NoError(err)
-	suite.NotZero(timestamp)
-}
-
-func (suite *XrpTestSuite) TestGetBlockResult() {
-	ctx := context.Background()
-	blockResult, err := suite.chainClient.GetBlockResult(ctx, suite.testLedger)
-	suite.Require().NoError(err)
-	suite.Require().NotNil(blockResult)
-
-	suite.Require().Len(blockResult.Transactions, 1)
-	tx := blockResult.Transactions[0]
-	suite.NotEmpty(tx.Hash)
-	suite.Equal(tx.BlockNumber, suite.testLedger)
-	suite.NotZero(tx.Timestamp)
-	suite.Empty(tx.PaymentReference)
-	suite.NotEmpty(tx.Response)
-	suite.True(tx.IsNativePayment)
-	suite.NotEmpty(tx.SourceAddressesRoot)
-	suite.NotEmpty(tx.SourceAddress)
-	suite.NotZero(tx.Sequence)
-	suite.Zero(tx.TicketSequence)
-	suite.Empty(tx.FirstMemoDataHash)
-	suite.Nil(tx.DestinationTag)
-
-	suite.Empty(blockResult.Events)
-}
-
-// Tests for TestGetLatestBlockInfo, TestGetBlockTimestamp and TestGetBlockResult
-// with wrong urls in client
-type XrpWrongUrlTestSuite struct {
-	suite.Suite
-	chainClient indexer.BlockchainClient[*xrp.Block, xrp.Transaction, struct{}]
-}
-
-func TestXrpWrongUrlTestSuite(t *testing.T) {
-	suite.Run(t, &XrpWrongUrlTestSuite{})
-}
-
-func (suite *XrpWrongUrlTestSuite) SetupTest() {
-	cfg := xrp.Config{"https://s.altnet.rippletest.net:512345"} // wrong port
-
-	var err error
-	suite.chainClient, err = xrp.New(&cfg)
-	require.NoError(suite.T(), err, "setup")
-}
-
-func (suite *XrpWrongUrlTestSuite) TestGetLatestBlockInfo() {
-	ctx := context.Background()
-	_, err := suite.chainClient.GetLatestBlockInfo(ctx)
-	suite.Error(err)
-}
-
-func (suite *XrpWrongUrlTestSuite) TestGetBlockTimestamp() {
-	ctx := context.Background()
-	_, err := suite.chainClient.GetBlockTimestamp(ctx, 1)
-	suite.Error(err)
-}
-
-func (suite *XrpWrongUrlTestSuite) TestGetBlockResult() {
-	ctx := context.Background()
-	_, err := suite.chainClient.GetBlockResult(ctx, 1)
-	suite.Error(err)
-}
-
-// Test for defining client with empty url
 func TestEmptyUrl(t *testing.T) {
-	cfg := xrp.Config{""}
-
-	var err error
-	_, err = xrp.New(&cfg)
+	_, err := xrp.New(&xrp.Config{Url: ""})
 	require.Error(t, err)
 }
 
 func TestGetServerInfo(t *testing.T) {
-	cfg := xrp.Config{Url: rpcURL}
-
-	chainClient, err := xrp.New(&cfg)
+	chainClient, err := xrp.New(&xrp.Config{Url: rpcURL})
 	require.NoError(t, err)
 
-	ctx, cancelFunc := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	serverInfo, err := chainClient.GetServerInfo(ctx)
-	cancelFunc()
 	require.NoError(t, err)
 
 	_, err = strconv.Atoi(serverInfo[0:1])
