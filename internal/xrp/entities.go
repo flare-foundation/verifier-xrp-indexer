@@ -2,6 +2,7 @@ package xrp
 
 import "github.com/flare-foundation/verifier-indexer-framework/pkg/database"
 
+// Transaction is the database model for an XRP ledger payment transaction.
 type Transaction struct {
 	Hash                string `gorm:"primaryKey;type:varchar(64)"`
 	BlockNumber         uint64 `gorm:"index"`
@@ -17,10 +18,12 @@ type Transaction struct {
 	DestinationTag      *uint32 `gorm:"index;default:null"`
 }
 
+// TimestampField returns the database column name used for timestamp-based queries.
 func (t *Transaction) TimestampField() string {
 	return "timestamp"
 }
 
+// Block is the database model for an XRP ledger block.
 type Block struct {
 	Hash         string `gorm:"primaryKey;type:varchar(64)"`
 	BlockNumber  uint64 `gorm:"index"`
@@ -28,18 +31,22 @@ type Block struct {
 	Transactions uint64
 }
 
+// GetBlockNumber returns the ledger index of the block.
 func (b *Block) GetBlockNumber() uint64 {
 	return b.BlockNumber
 }
 
+// GetTimestamp returns the Unix close time of the block.
 func (b *Block) GetTimestamp() uint64 {
 	return b.Timestamp
 }
 
+// TimestampField returns the database column name used for timestamp-based queries.
 func (b *Block) TimestampField() string {
 	return "timestamp"
 }
 
+// HistoryDropOrder returns the tables to prune when dropping historical data.
 func (b *Block) HistoryDropOrder() []database.Deletable {
 	var block Block
 	var tx Transaction

@@ -28,6 +28,7 @@ const (
 	paymentType   = "Payment"
 )
 
+// Config holds the configuration for the XRP RPC client.
 type Config struct {
 	Url string `toml:"url"`
 }
@@ -37,6 +38,7 @@ type xrpClient struct {
 	url    string
 }
 
+// New creates a new XRP blockchain client from the given configuration.
 func New(cfg *Config) (indexer.BlockchainClient[*Block, Transaction, struct{}], error) {
 	if cfg.Url == "" {
 		return nil, errors.New("url must be provided")
@@ -48,6 +50,8 @@ func New(cfg *Config) (indexer.BlockchainClient[*Block, Transaction, struct{}], 
 	}, nil
 }
 
+// ApplyEnvOverrides overrides config fields from environment variables.
+// XRP_URL overrides Url.
 func (c *Config) ApplyEnvOverrides() error {
 	if url, ok := os.LookupEnv("XRP_URL"); ok {
 		c.Url = url
@@ -147,6 +151,7 @@ var getServerState = xrpRequest{
 	Method: "server_info",
 }
 
+// getResponse sends a JSON-RPC POST request to the node and returns the raw response body.
 func (c *xrpClient) getResponse(ctx context.Context, request xrpRequest) ([]byte, error) {
 	getReq, err := json.Marshal(request)
 	if err != nil {
@@ -186,6 +191,7 @@ func (c *xrpClient) getResponse(ctx context.Context, request xrpRequest) ([]byte
 	return resBody, nil
 }
 
+// getLedgerResponse sends a ledger RPC request and returns the parsed, validated response.
 func (c *xrpClient) getLedgerResponse(ctx context.Context, params ledgerParams) (*ledgerResponse, error) {
 	request := xrpRequest{
 		Method: "ledger",
@@ -211,6 +217,7 @@ func (c *xrpClient) getLedgerResponse(ctx context.Context, params ledgerParams) 
 	return &respStruct, nil
 }
 
+// GetLatestBlockInfo returns the index and close time of the latest validated ledger.
 func (c *xrpClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo, error) {
 	respStruct, err := c.getLedgerResponse(ctx, getLatestParams)
 	if err != nil {
@@ -223,6 +230,7 @@ func (c *xrpClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo,
 	}, nil
 }
 
+// GetBlockTimestamp returns the Unix close time of the ledger at blockNum.
 func (c *xrpClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint64, error) {
 	getBlockParams := ledgerParams{
 		LedgerIndex:  strconv.Itoa(int(blockNum)),
@@ -238,6 +246,7 @@ func (c *xrpClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uin
 	return respStruct.Result.Ledger.CloseTime + XRPTimeOffset, nil
 }
 
+// GetBlockResult returns the block header and all transactions for the ledger at blockNum.
 func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*indexer.BlockResult[*Block, Transaction, struct{}], error) {
 	getBlockParams := ledgerParams{
 		LedgerIndex:  strconv.Itoa(int(blockNum)),
@@ -306,6 +315,8 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 	return &indexer.BlockResult[*Block, Transaction, struct{}]{Block: block, Transactions: transactions}, nil
 }
 
+// firstMemoDataHash returns the Keccak256 hash of the first memo's MemoData field,
+// or an empty string if no memo or MemoData is present.
 func firstMemoDataHash(tx xrpTransaction) string {
 	if len(tx.Memos) > 0 && tx.Memos[0] != nil {
 		if memo, ok := tx.Memos[0]["Memo"]; ok {
@@ -323,6 +334,8 @@ func firstMemoDataHash(tx xrpTransaction) string {
 	return ""
 }
 
+// paymentReference returns the MemoData of the transaction's single memo if it is
+// exactly 64 hex characters, or an empty string otherwise.
 func paymentReference(tx xrpTransaction) string {
 	if len(tx.Memos) == 1 && tx.Memos[0] != nil {
 		if memo, ok := tx.Memos[0]["Memo"]; ok {
@@ -337,6 +350,8 @@ func paymentReference(tx xrpTransaction) string {
 	return ""
 }
 
+// isNativePayment reports whether the transaction Amount represents a native XRP drop
+// value (a quoted integer string) rather than a token amount (a JSON object).
 func isNativePayment(tx xrpTransaction) (bool, error) {
 	if len(tx.Amount) == 0 {
 		return false, errors.New("empty Amount field")
@@ -360,6 +375,9 @@ func isNativePayment(tx xrpTransaction) (bool, error) {
 	return amountObj.Currency == xrpCurrency, nil
 }
 
+// sourceAddressesRoot computes the Merkle root of the double-Keccak256-hashed addresses
+// whose XRP balance decreased in the transaction. Returns an empty string if no such
+// addresses exist.
 func sourceAddressesRoot(tx xrpTransaction) (string, error) {
 	var meta xrpMeta
 
@@ -421,6 +439,7 @@ func sourceAddressesRoot(tx xrpTransaction) (string, error) {
 	return "", nil
 }
 
+// GetServerInfo returns a string of the form "<version>_<state>" identifying the node.
 func (c *xrpClient) GetServerInfo(ctx context.Context) (string, error) {
 	resBody, err := c.getResponse(ctx, getServerState)
 	if err != nil {
