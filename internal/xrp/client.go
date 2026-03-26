@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -18,6 +19,25 @@ import (
 type xrpClient struct {
 	client *http.Client
 	url    string
+}
+
+// New creates a new XRP blockchain client from the given configuration.
+func New(cfg *Config) (indexer.BlockchainClient[*Block, Transaction, struct{}], error) {
+	if cfg.Url == "" {
+		return nil, errors.New("url must be provided")
+	}
+
+	configPath := configFilePath()
+	if data, err := os.ReadFile(configPath); err == nil {
+		logger.Debugf("Config file (%s):\n%s", configPath, string(data))
+	} else {
+		logger.Debugf("Could not read config file %s: %v", configPath, err)
+	}
+
+	return &xrpClient{
+		client: http.DefaultClient,
+		url:    cfg.Url,
+	}, nil
 }
 
 // getResponse sends a JSON-RPC POST request to the node and returns the raw response body.
@@ -144,7 +164,7 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 	logger.Debugf("Processing ledger %d with %d transactions", blockNum, len(respStruct.Result.Ledger.Transactions))
 
 	for i := range transactions {
-		var tx xrpTransaction
+		var tx transaction
 		err = json.Unmarshal([]byte(respStruct.Result.Ledger.Transactions[i]), &tx)
 		if err != nil {
 			return nil, fmt.Errorf("unmarshal transaction %d: %w", i, err)
@@ -163,27 +183,29 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 
 		// case-insensitive check for transaction type
 		if strings.EqualFold(tx.TransactionType, paymentType) {
-			transactions[i].PaymentReference = paymentReference(tx)
-			isNative, err := isNativePayment(tx)
+			transactions[i].PaymentReference = tx.paymentReference()
+			isNative, err := tx.isNativePayment()
 			if err != nil {
 				return nil, fmt.Errorf("isNativePayment: %w", err)
 			}
 			transactions[i].IsNativePayment = isNative
 		}
 
-		transactions[i].SourceAddressesRoot, err = sourceAddressesRoot(tx)
+		transactions[i].SourceAddressesRoot, err = tx.sourceAddressesRoot()
 		if err != nil {
 			return nil, fmt.Errorf("source addresses root for tx %s: %w", tx.Hash, err)
 		}
 
-		transactions[i].FirstMemoDataHash, err = firstMemoDataHash(tx)
+		transactions[i].FirstMemoDataHash, err = tx.firstMemoDataHash()
 		if err != nil {
 			return nil, fmt.Errorf("first memo hash for tx %s: %w", tx.Hash, err)
 		}
-
 	}
 
-	return &indexer.BlockResult[*Block, Transaction, struct{}]{Block: block, Transactions: transactions}, nil
+	return &indexer.BlockResult[*Block, Transaction, struct{}]{
+		Block:        block,
+		Transactions: transactions,
+	}, nil
 }
 
 // GetServerInfo returns a string of the form "<version>_<state>" identifying the node.

@@ -36,13 +36,14 @@ func TestFirstMemoDataHash(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var tx xrpTransaction
+			var tx transaction
 			if tt.memoData != "" {
 				tx.Memos = []map[string]map[string]string{
 					{"Memo": {"MemoData": tt.memoData}},
 				}
 			}
-			result := firstMemoDataHash(tx)
+			result, err := tx.firstMemoDataHash()
+			require.NoError(t, err)
 			require.Equal(t, tt.expected, result)
 		})
 	}

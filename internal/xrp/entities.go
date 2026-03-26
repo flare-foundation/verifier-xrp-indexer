@@ -1,6 +1,8 @@
 package xrp
 
-import "github.com/flare-foundation/verifier-indexer-framework/pkg/database"
+import (
+	"github.com/flare-foundation/verifier-indexer-framework/pkg/database"
+)
 
 // Transaction is the database model for an XRP ledger payment transaction.
 type Transaction struct {
@@ -22,6 +24,8 @@ type Transaction struct {
 func (t *Transaction) TimestampField() string {
 	return "timestamp"
 }
+
+var _ database.Block = new(Block)
 
 // Block is the database model for an XRP ledger block.
 type Block struct {

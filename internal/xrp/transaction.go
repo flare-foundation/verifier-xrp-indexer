@@ -19,9 +19,21 @@ const (
 	paymentType = "Payment"
 )
 
+type transaction struct {
+	Hash            string                         `json:"hash"`
+	Memos           []map[string]map[string]string `json:"Memos"`
+	TransactionType string                         `json:"TransactionType"`
+	Sequence        uint64                         `json:"Sequence"`
+	TicketSequence  uint64                         `json:"TicketSequence"`
+	Account         string                         `json:"Account"`
+	Amount          json.RawMessage                `json:"Amount"`
+	MetaData        json.RawMessage                `json:"metaData"`
+	DestinationTag  *uint32                        `json:"DestinationTag"`
+}
+
 // firstMemoDataHash returns the Keccak256 hash of the first memo's MemoData field,
 // or an empty string if no memo or MemoData is present.
-func firstMemoDataHash(tx xrpTransaction) (string, error) {
+func (tx *transaction) firstMemoDataHash() (string, error) {
 	if len(tx.Memos) > 0 && tx.Memos[0] != nil {
 		if memo, ok := tx.Memos[0]["Memo"]; ok {
 			if memoData, ok := memo["MemoData"]; ok && memoData != "" {
@@ -41,7 +53,7 @@ func firstMemoDataHash(tx xrpTransaction) (string, error) {
 
 // paymentReference returns the MemoData of the transaction's single memo if it is
 // exactly 64 hex characters, or an empty string otherwise.
-func paymentReference(tx xrpTransaction) string {
+func (tx *transaction) paymentReference() string {
 	if len(tx.Memos) == 1 && tx.Memos[0] != nil {
 		if memo, ok := tx.Memos[0]["Memo"]; ok {
 			if memoData, ok := memo["MemoData"]; ok {
@@ -57,7 +69,7 @@ func paymentReference(tx xrpTransaction) string {
 
 // isNativePayment reports whether the transaction Amount represents a native XRP drop
 // value (a quoted integer string) rather than a token amount (a JSON object).
-func isNativePayment(tx xrpTransaction) (bool, error) {
+func (tx *transaction) isNativePayment() (bool, error) {
 	if len(tx.Amount) == 0 {
 		return false, errors.New("empty Amount field")
 	}
@@ -73,7 +85,7 @@ func isNativePayment(tx xrpTransaction) (bool, error) {
 		return err == nil, nil
 	}
 
-	var amountObj xrpAmount
+	var amountObj amount
 	if err := json.Unmarshal(tx.Amount, &amountObj); err != nil {
 		return false, fmt.Errorf("unmarshal amount object: %w", err)
 	}
@@ -83,8 +95,8 @@ func isNativePayment(tx xrpTransaction) (bool, error) {
 // sourceAddressesRoot computes the Merkle root of the double-Keccak256-hashed addresses
 // whose XRP balance decreased in the transaction. Returns an empty string if no such
 // addresses exist.
-func sourceAddressesRoot(tx xrpTransaction) (string, error) {
-	var meta xrpMeta
+func (tx *transaction) sourceAddressesRoot() (string, error) {
+	var meta meta
 
 	err := json.Unmarshal(tx.MetaData, &meta)
 	if err != nil {

@@ -1,40 +1,29 @@
 package xrp
 
 import (
-	"errors"
-	"net/http"
 	"os"
 	"strings"
 
-	"github.com/flare-foundation/go-flare-common/pkg/logger"
-	"github.com/flare-foundation/verifier-indexer-framework/pkg/indexer"
+	"github.com/flare-foundation/verifier-indexer-framework/pkg/config"
 )
 
 // XRPTimeOffset is the seconds between the XRP epoch (Jan 1 2000) and the Unix epoch (Jan 1 1970).
 const XRPTimeOffset = uint64(946684800)
+
+var _ config.EnvOverrideable = new(Config)
 
 // Config holds the configuration for the XRP RPC client.
 type Config struct {
 	Url string `toml:"url"`
 }
 
-// New creates a new XRP blockchain client from the given configuration.
-func New(cfg *Config) (indexer.BlockchainClient[*Block, Transaction, struct{}], error) {
-	if cfg.Url == "" {
-		return nil, errors.New("url must be provided")
+// ApplyEnvOverrides overrides config fields from environment variables.
+// XRP_URL overrides Url.
+func (c *Config) ApplyEnvOverrides() error {
+	if url, ok := os.LookupEnv("XRP_URL"); ok {
+		c.Url = url
 	}
-
-	configPath := configFilePath()
-	if data, err := os.ReadFile(configPath); err == nil {
-		logger.Debugf("Config file (%s):\n%s", configPath, string(data))
-	} else {
-		logger.Debugf("Could not read config file %s: %v", configPath, err)
-	}
-
-	return &xrpClient{
-		client: http.DefaultClient,
-		url:    cfg.Url,
-	}, nil
+	return nil
 }
 
 // configFilePath resolves the config file path from the --config flag,
@@ -53,13 +42,4 @@ func configFilePath() string {
 		return path
 	}
 	return "config.toml"
-}
-
-// ApplyEnvOverrides overrides config fields from environment variables.
-// XRP_URL overrides Url.
-func (c *Config) ApplyEnvOverrides() error {
-	if url, ok := os.LookupEnv("XRP_URL"); ok {
-		c.Url = url
-	}
-	return nil
 }
