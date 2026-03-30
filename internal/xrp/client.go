@@ -110,7 +110,7 @@ func (c *xrpClient) getLedgerResponse(ctx context.Context, params ledgerParams) 
 func (c *xrpClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo, error) {
 	respStruct, err := c.getLedgerResponse(ctx, getLatestParams)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get latest block info: %w", err)
 	}
 
 	return &indexer.BlockInfo{
@@ -129,7 +129,7 @@ func (c *xrpClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uin
 	}
 	respStruct, err := c.getLedgerResponse(ctx, getBlockParams)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("get block timestamp for %d: %w", blockNum, err)
 	}
 
 	return respStruct.Result.Ledger.CloseTime + XRPTimeOffset, nil
@@ -145,7 +145,7 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 	}
 	respStruct, err := c.getLedgerResponse(ctx, getBlockParams)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get block result for %d: %w", blockNum, err)
 	}
 
 	if !respStruct.Result.Validated {
