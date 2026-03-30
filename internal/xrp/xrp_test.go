@@ -44,7 +44,7 @@ func TestXrp(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("GetLatestBlockInfo", func(t *testing.T) {
-		blockInfo, err := chainClient.GetLatestBlockInfo(context.Background())
+		blockInfo, err := chainClient.GetLatestBlockInfo(t.Context())
 		require.NoError(t, err)
 
 		timeNow := uint64(time.Now().Unix())
@@ -54,13 +54,13 @@ func TestXrp(t *testing.T) {
 	})
 
 	t.Run("GetBlockTimestamp", func(t *testing.T) {
-		timestamp, err := chainClient.GetBlockTimestamp(context.Background(), testLedger)
+		timestamp, err := chainClient.GetBlockTimestamp(t.Context(), testLedger)
 		require.NoError(t, err)
 		require.NotZero(t, timestamp)
 	})
 
 	t.Run("GetBlockResult", func(t *testing.T) {
-		blockResult, err := chainClient.GetBlockResult(context.Background(), testLedger)
+		blockResult, err := chainClient.GetBlockResult(t.Context(), testLedger)
 		require.NoError(t, err)
 		require.NotNil(t, blockResult)
 
@@ -87,17 +87,17 @@ func TestWrongURL(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("GetLatestBlockInfo", func(t *testing.T) {
-		_, err := chainClient.GetLatestBlockInfo(context.Background())
+		_, err := chainClient.GetLatestBlockInfo(t.Context())
 		require.Error(t, err)
 	})
 
 	t.Run("GetBlockTimestamp", func(t *testing.T) {
-		_, err := chainClient.GetBlockTimestamp(context.Background(), 1)
+		_, err := chainClient.GetBlockTimestamp(t.Context(), 1)
 		require.Error(t, err)
 	})
 
 	t.Run("GetBlockResult", func(t *testing.T) {
-		_, err := chainClient.GetBlockResult(context.Background(), 1)
+		_, err := chainClient.GetBlockResult(t.Context(), 1)
 		require.Error(t, err)
 	})
 }
@@ -111,7 +111,7 @@ func TestGetServerInfo(t *testing.T) {
 	chainClient, err := xrp.New(&xrp.Config{Url: rpcURL})
 	require.NoError(t, err)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
 	defer cancel()
 
 	serverInfo, err := chainClient.GetServerInfo(ctx)
