@@ -103,7 +103,7 @@ func (tx *transaction) sourceAddressesRoot() (string, error) {
 		return "", errors.New("unable to unmarshal source addresses")
 	}
 
-	sourceAddresses := make([]common.Hash, 0)
+	sourceAddresses := make([]common.Hash, 0, 1)
 	for _, node := range meta.AffectedNodes {
 		modifiedNode := node.ModifiedNode
 		if modifiedNode.LedgerEntryType != "AccountRoot" || modifiedNode.FinalFields.Account == "" {
