@@ -78,6 +78,12 @@ func TestXrp(t *testing.T) {
 		require.True(t, tx.IsNativePayment)
 		require.NotEmpty(t, tx.SourceAddressesRoot)
 
+		require.NotEmpty(t, tx.SourceAddress)
+		require.NotZero(t, tx.Sequence)
+		require.Zero(t, tx.TicketSequence)
+		require.Empty(t, tx.FirstMemoDataHash)
+		require.Nil(t, tx.DestinationTag)
+
 		require.Empty(t, blockResult.Events)
 	})
 }
