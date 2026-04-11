@@ -9,8 +9,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/flare-foundation/go-flare-common/pkg/merkle"
 )
 
@@ -18,6 +20,14 @@ const (
 	xrpCurrency = "XRP"
 	paymentType = "Payment"
 )
+
+var stringType, _ = abi.NewType("uint8", "", nil)
+
+var addressArgument = abi.Arguments{
+	{
+		Type: stringType,
+	},
+}
 
 type transaction struct {
 	Hash            string                         `json:"hash"`
@@ -28,6 +38,7 @@ type transaction struct {
 	Account         string                         `json:"Account"`
 	Amount          json.RawMessage                `json:"Amount"`
 	MetaData        json.RawMessage                `json:"metaData"`
+	Destination     string                         `json:"Destination"`
 	DestinationTag  *uint32                        `json:"DestinationTag"`
 }
 
@@ -90,6 +101,37 @@ func (tx *transaction) isNativePayment() (bool, error) {
 		return false, fmt.Errorf("unmarshal amount object: %w", err)
 	}
 	return amountObj.Currency == xrpCurrency, nil
+}
+
+func (tx *transaction) destinationAddressHash() (string, error) {
+	if len(tx.Destination) > 0 {
+		encoded, err := addressArgument.Pack(tx.Destination)
+		if err != nil {
+			return "", fmt.Errorf("encoding address: %w", err)
+		}
+
+		return crypto.Keccak256Hash(encoded).String(), nil
+	}
+
+	return "", nil
+}
+
+func (tx *transaction) intendedReceivingAmount() (uint64, error) {
+	native, err := tx.isNativePayment()
+	if err != nil {
+		return 0, fmt.Errorf("is native error: %w", err)
+	}
+
+	if !native {
+		return 0, nil
+	}
+
+	var amount uint64
+	if err := json.Unmarshal(tx.Amount, &amount); err != nil {
+		return 0, fmt.Errorf("unmarshal amount: %w", err)
+	}
+
+	return amount, nil
 }
 
 // sourceAddressesRoot computes the Merkle root of the double-Keccak256-hashed addresses

@@ -191,6 +191,16 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 			transactions[i].IsNativePayment = isNative
 		}
 
+		transactions[i].DestinationAddressHash, err = tx.destinationAddressHash()
+		if err != nil {
+			return nil, fmt.Errorf("destination address hash for tx %s: %w", tx.Hash, err)
+		}
+
+		transactions[i].IntendedReceivingAmount, err = tx.intendedReceivingAmount()
+		if err != nil {
+			return nil, fmt.Errorf("intended receiving amount for tx %s: %w", tx.Hash, err)
+		}
+
 		transactions[i].SourceAddressesRoot, err = tx.sourceAddressesRoot()
 		if err != nil {
 			return nil, fmt.Errorf("source addresses root for tx %s: %w", tx.Hash, err)
