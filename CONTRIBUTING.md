@@ -90,7 +90,7 @@ Run the tests with:
 The test need a
 
 ```
-go test ./...
+go test -v ./...
 ```
 
 ## Release process (if applicable)

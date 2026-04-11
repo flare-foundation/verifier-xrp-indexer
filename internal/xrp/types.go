@@ -41,12 +41,24 @@ type meta struct {
 }
 
 type affectedNodes struct {
-	ModifiedNode modifiedNode `json:"ModifiedNode"`
+	ModifiedNode nodeChange  `json:"ModifiedNode"`
+	CreatedNode  createdNode `json:"CreatedNode"`
+	DeletedNode  nodeChange  `json:"DeletedNode"`
 }
 
-type modifiedNode struct {
+// nodeChange represents a ModifiedNode or DeletedNode entry in transaction
+// metadata. Both share the same structure with FinalFields and PreviousFields.
+type nodeChange struct {
 	FinalFields     fields `json:"FinalFields"`
 	PreviousFields  fields `json:"PreviousFields"`
+	LedgerEntryType string `json:"LedgerEntryType"`
+}
+
+// createdNode represents a CreatedNode entry in transaction metadata.
+// Unlike modified and deleted nodes, it uses NewFields instead of
+// FinalFields/PreviousFields.
+type createdNode struct {
+	NewFields       fields `json:"NewFields"`
 	LedgerEntryType string `json:"LedgerEntryType"`
 }
 

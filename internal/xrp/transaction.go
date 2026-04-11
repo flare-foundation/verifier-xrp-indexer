@@ -105,16 +105,28 @@ func (tx *transaction) sourceAddressesRoot() (string, error) {
 
 	sourceAddresses := make([]common.Hash, 0, 1)
 	for _, node := range meta.AffectedNodes {
-		modifiedNode := node.ModifiedNode
-		if modifiedNode.LedgerEntryType != "AccountRoot" || modifiedNode.FinalFields.Account == "" {
+		// ModifiedNode and DeletedNode share the same structure and can both
+		// represent source addresses with decreased balances. CreatedNode entries
+		// only have increased balances (from zero) and are not source addresses.
+		var change nodeChange
+		switch {
+		case node.ModifiedNode.LedgerEntryType != "":
+			change = node.ModifiedNode
+		case node.DeletedNode.LedgerEntryType != "":
+			change = node.DeletedNode
+		default:
+			continue
+		}
+
+		if change.LedgerEntryType != "AccountRoot" || change.FinalFields.Account == "" {
 			continue
 		}
 
 		var balance string
 		finalVal := big.NewInt(0)
 		var check bool
-		if len(modifiedNode.FinalFields.Balance) > 0 {
-			err = json.Unmarshal(modifiedNode.FinalFields.Balance, &balance)
+		if len(change.FinalFields.Balance) > 0 {
+			err = json.Unmarshal(change.FinalFields.Balance, &balance)
 			if err != nil {
 				return "", fmt.Errorf("unable to unmarshal final balance: %w", err)
 			}
@@ -125,8 +137,8 @@ func (tx *transaction) sourceAddressesRoot() (string, error) {
 		}
 
 		previousVal := big.NewInt(0)
-		if len(modifiedNode.PreviousFields.Balance) > 0 {
-			err = json.Unmarshal(modifiedNode.PreviousFields.Balance, &balance)
+		if len(change.PreviousFields.Balance) > 0 {
+			err = json.Unmarshal(change.PreviousFields.Balance, &balance)
 			if err != nil {
 				return "", fmt.Errorf("unable to unmarshal previous balance: %w", err)
 			}
@@ -138,7 +150,7 @@ func (tx *transaction) sourceAddressesRoot() (string, error) {
 
 		diff := new(big.Int).Sub(finalVal, previousVal)
 		if diff.Cmp(big.NewInt(0)) < 0 {
-			hashedAddress := crypto.Keccak256Hash(crypto.Keccak256Hash([]byte(modifiedNode.FinalFields.Account)).Bytes())
+			hashedAddress := crypto.Keccak256Hash(crypto.Keccak256Hash([]byte(change.FinalFields.Account)).Bytes())
 			sourceAddresses = append(sourceAddresses, hashedAddress)
 		}
 	}
