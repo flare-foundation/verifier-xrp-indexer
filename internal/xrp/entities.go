@@ -14,7 +14,7 @@ type Transaction struct {
 	Response                string `gorm:"type:varchar"`
 	IsNativePayment         bool   `gorm:"index"`
 	IntendedReceivingAmount uint64 `gorm:"index"`
-	DestinationAddressHash  string `gorm:"index"`
+	DestinationAddressHash  string `gorm:"index;type:varchar(64)"`
 	SourceAddressesRoot     string `gorm:"index;type:varchar(64);default:null"`
 	Sequence                uint64 `gorm:"index:idx_source_sequence,priority:2"`
 	TicketSequence          uint64

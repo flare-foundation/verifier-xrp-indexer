@@ -138,6 +138,27 @@ func (tx *transaction) intendedReceivingAmount() (uint64, error) {
 	return amount, nil
 }
 
+func (tx *transaction) transactionStatus() (uint8, error) {
+	var meta struct {
+		TransactionResult string `json:"TransactionResult"`
+	}
+
+	err := json.Unmarshal(tx.MetaData, &meta)
+	if err != nil {
+		return 0, fmt.Errorf("unmarshal meta data: %w", err)
+	}
+
+	switch meta.TransactionResult {
+	case "tesSUCCESS":
+		return 0, nil
+	case "tecDST_TAG_NEEDED", "tecNO_DST", "tecNO_DST_INSUF_XRP", "tecNO_PERMISSION":
+		return 1, nil
+
+	default:
+		return 2, nil
+	}
+}
+
 // sourceAddressesRoot computes the Merkle root of the double-Keccak256-hashed addresses
 // whose XRP balance decreased in the transaction. Returns an empty string if no such
 // addresses exist.
