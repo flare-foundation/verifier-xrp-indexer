@@ -21,7 +21,7 @@ func TestTransactionStatus(t *testing.T) {
 		{
 			name:     "sender failure tecUNFUNDED_PAYMENT",
 			metaData: `{"AffectedNodes":[],"TransactionResult":"tecUNFUNDED_PAYMENT"}`,
-			expected: true,
+			expected: false,
 		},
 		{
 			name:     "sender failure tecNO_DST",
