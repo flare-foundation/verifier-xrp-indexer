@@ -143,6 +143,9 @@ func (tx *transaction) intendedReceivingAmount() (uint64, error) {
 	return amount, nil
 }
 
+// transactionStatus returns a numeric status code derived from the transaction's
+// TransactionResult metadata: 0 for success, 1 for destination-related failures,
+// and 2 for all other results.
 func (tx *transaction) transactionStatus() (uint8, error) {
 	var meta struct {
 		TransactionResult string `json:"TransactionResult"`
