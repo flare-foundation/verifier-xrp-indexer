@@ -9,7 +9,7 @@ type Transaction struct {
 	Hash                    string `gorm:"primaryKey;type:varchar(64)"`
 	BlockNumber             uint64 `gorm:"index;index:idx_payref_block,priority:2;index:idx_dest_block,priority:2"`
 	Timestamp               uint64 `gorm:"index"`
-	TransactionStatus       uint8  `gorm:"index"`
+	TransactionStatus       bool   `gorm:"index"`
 	PaymentReference        string `gorm:"index:idx_payref_block,priority:1;type:varchar(64);default:null"`
 	Response                string `gorm:"type:varchar"`
 	IsNativePayment         bool   `gorm:"index"`

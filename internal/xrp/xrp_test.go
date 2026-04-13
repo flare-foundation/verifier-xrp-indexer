@@ -86,7 +86,7 @@ func TestXrp(t *testing.T) {
 
 		require.NotEmpty(t, tx.DestinationAddressHash)
 		require.NotZero(t, tx.IntendedReceivingAmount)
-		require.Equal(t, xrp.StatusSuccess, tx.TransactionStatus)
+		require.True(t, tx.TransactionStatus)
 
 		require.Empty(t, blockResult.Events)
 	})

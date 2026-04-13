@@ -42,22 +42,27 @@ func TestTransactionStatus(t *testing.T) {
 	tests := []struct {
 		name     string
 		metaData string
-		expected uint8
+		expected bool
 	}{
 		{
 			name:     "success",
 			metaData: `{"AffectedNodes":[],"TransactionResult":"tesSUCCESS"}`,
-			expected: StatusSuccess,
+			expected: true,
 		},
 		{
 			name:     "sender failure tecUNFUNDED_PAYMENT",
 			metaData: `{"AffectedNodes":[],"TransactionResult":"tecUNFUNDED_PAYMENT"}`,
-			expected: StatusSenderFailure,
+			expected: true,
 		},
 		{
 			name:     "sender failure tecNO_DST",
 			metaData: `{"AffectedNodes":[],"TransactionResult":"tecNO_DST"}`,
-			expected: StatusSenderFailure,
+			expected: true,
+		},
+		{
+			name:     "unknown result",
+			metaData: `{"AffectedNodes":[],"TransactionResult":"temBAD_AMOUNT"}`,
+			expected: false,
 		},
 	}
 

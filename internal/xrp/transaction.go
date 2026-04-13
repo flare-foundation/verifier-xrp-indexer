@@ -20,14 +20,6 @@ const (
 	paymentType = "Payment"
 )
 
-const (
-	// StatusSuccess indicates the transaction succeeded (tes-class result).
-	StatusSuccess uint8 = iota
-	// StatusSenderFailure indicates the transaction was included but failed
-	// due to the sender (tec-class result).
-	StatusSenderFailure
-)
-
 type transaction struct {
 	Hash            string                         `json:"hash"`
 	Memos           []map[string]map[string]string `json:"Memos"`
@@ -114,20 +106,19 @@ func (tx *transaction) destinationAddressHash() string {
 	return strings.ToLower(hash.Hex()[2:])
 }
 
-// transactionStatus returns the transaction outcome derived from metadata.
-// On-chain XRP transactions have either a "tes" (success) or "tec" (sender
-// failure) result prefix.
-func (tx *transaction) transactionStatus() (uint8, error) {
+// transactionStatus reports whether the transaction was included in the ledger.
+// Returns true for "tes" (success) and "tec" (sender failure) results, false otherwise.
+func (tx *transaction) transactionStatus() (bool, error) {
 	var m meta
 	if err := json.Unmarshal(tx.MetaData, &m); err != nil {
-		return 0, fmt.Errorf("unmarshal metadata: %w", err)
+		return false, fmt.Errorf("unmarshal metadata: %w", err)
 	}
 
-	if strings.HasPrefix(m.TransactionResult, "tec") {
-		return StatusSenderFailure, nil
+	if strings.HasPrefix(m.TransactionResult, "tes") || strings.HasPrefix(m.TransactionResult, "tec") {
+		return true, nil
 	}
 
-	return StatusSuccess, nil
+	return false, nil
 }
 
 // intendedReceivingAmount returns the native XRP amount in drops that the
