@@ -7,14 +7,14 @@ import (
 // Transaction is the database model for an XRP ledger payment transaction.
 type Transaction struct {
 	Hash                    string `gorm:"primaryKey;type:varchar(64)"`
-	BlockNumber             uint64 `gorm:"index"`
+	BlockNumber             uint64 `gorm:"index;index:idx_payref_block,priority:2;index:idx_dest_block,priority:2"`
 	Timestamp               uint64 `gorm:"index"`
 	TransactionStatus       uint8  `gorm:"index"`
-	PaymentReference        string `gorm:"index;type:varchar(64);default:null"`
+	PaymentReference        string `gorm:"index:idx_payref_block,priority:1;type:varchar(64);default:null"`
 	Response                string `gorm:"type:varchar"`
 	IsNativePayment         bool   `gorm:"index"`
-	IntendedReceivingAmount uint64 `gorm:"index"`
-	DestinationAddressHash  string `gorm:"index;type:varchar(64)"`
+	IntendedReceivingAmount uint64
+	DestinationAddressHash  string `gorm:"index:idx_dest_block,priority:1;type:varchar(64);default:null"`
 	SourceAddressesRoot     string `gorm:"index;type:varchar(64);default:null"`
 	Sequence                uint64 `gorm:"index:idx_source_sequence,priority:2"`
 	TicketSequence          uint64
