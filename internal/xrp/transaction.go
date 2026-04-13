@@ -21,7 +21,7 @@ const (
 	paymentType = "Payment"
 )
 
-var stringType, _ = abi.NewType("uint8", "", nil)
+var stringType, _ = abi.NewType("string", "", nil)
 
 var addressArgument = abi.Arguments{
 	{
@@ -130,9 +130,14 @@ func (tx *transaction) intendedReceivingAmount() (uint64, error) {
 		return 0, nil
 	}
 
-	var amount uint64
-	if err := json.Unmarshal(tx.Amount, &amount); err != nil {
-		return 0, fmt.Errorf("unmarshal amount: %w", err)
+	var amountStr string
+	if err := json.Unmarshal(tx.Amount, &amountStr); err != nil {
+		return 0, fmt.Errorf("unmarshal amount str: %w", err)
+	}
+
+	amount, err := strconv.ParseUint(amountStr, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("parsing amount: %w", err)
 	}
 
 	return amount, nil
