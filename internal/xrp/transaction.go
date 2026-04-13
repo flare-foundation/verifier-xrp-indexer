@@ -98,10 +98,10 @@ func (tx *transaction) isNativePayment() (bool, error) {
 // Destination address, or an empty string if no destination is set.
 func (tx *transaction) destinationAddressHash() string {
 	if len(tx.Destination) > 0 {
-		return crypto.Keccak256Hash([]byte(tx.Destination)).Hex()
+		return crypto.Keccak256Hash([]byte(tx.Destination)).Hex()[2:]
 	}
 
-	return common.Hash{}.Hex()
+	return ""
 }
 
 // transactionStatus returns a numeric status code derived from the transaction's

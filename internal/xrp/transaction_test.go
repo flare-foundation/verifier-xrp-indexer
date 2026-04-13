@@ -267,15 +267,15 @@ func TestDestinationAddressHash(t *testing.T) {
 	}{
 		{
 			address:                "ryouhapPYV5KNHmFUKrjNqsjxhnxvQiVt",
-			destinationAddressHash: "0x8f40c24f58fb0abfe1312837a2345d2294762ca46994acc99ff13ccba01fe1b2",
+			destinationAddressHash: "8f40c24f58fb0abfe1312837a2345d2294762ca46994acc99ff13ccba01fe1b2",
 		},
 		{
 			address:                "r3iE6gLEVq6XXN8ddPWxffcYKJLxG2tC51",
-			destinationAddressHash: "0x32ba9ed8519cb562a6f845df24258d3d093fab95c049ebe45a25662c226dfb43",
+			destinationAddressHash: "32ba9ed8519cb562a6f845df24258d3d093fab95c049ebe45a25662c226dfb43",
 		},
 		{
 			address:                "",
-			destinationAddressHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
+			destinationAddressHash: "",
 		},
 	}
 
