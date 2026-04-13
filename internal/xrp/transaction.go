@@ -103,6 +103,8 @@ func (tx *transaction) isNativePayment() (bool, error) {
 	return amountObj.Currency == xrpCurrency, nil
 }
 
+// destinationAddressHash returns the ABI-encoded Keccak256 hash of the transaction's
+// Destination address, or an empty string if no destination is set.
 func (tx *transaction) destinationAddressHash() (string, error) {
 	if len(tx.Destination) > 0 {
 		encoded, err := addressArgument.Pack(tx.Destination)
@@ -116,6 +118,8 @@ func (tx *transaction) destinationAddressHash() (string, error) {
 	return "", nil
 }
 
+// intendedReceivingAmount returns the intended receiving amount in XRP drops for native
+// payment transactions, or 0 for non-native (token) payments.
 func (tx *transaction) intendedReceivingAmount() (uint64, error) {
 	native, err := tx.isNativePayment()
 	if err != nil {
