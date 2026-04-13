@@ -171,14 +171,15 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 		}
 
 		transactions[i] = Transaction{
-			Hash:           strings.ToLower(tx.Hash),
-			BlockNumber:    respStruct.Result.LedgerIndex,
-			Timestamp:      respStruct.Result.Ledger.CloseTime + XRPTimeOffset,
-			Response:       string(respStruct.Result.Ledger.Transactions[i]),
-			DestinationTag: tx.DestinationTag,
-			SourceAddress:  tx.Account,
-			Sequence:       tx.Sequence,
-			TicketSequence: tx.TicketSequence,
+			Hash:                   strings.ToLower(tx.Hash),
+			BlockNumber:            respStruct.Result.LedgerIndex,
+			Timestamp:              respStruct.Result.Ledger.CloseTime + XRPTimeOffset,
+			Response:               string(respStruct.Result.Ledger.Transactions[i]),
+			DestinationTag:         tx.DestinationTag,
+			SourceAddress:          tx.Account,
+			Sequence:               tx.Sequence,
+			TicketSequence:         tx.TicketSequence,
+			DestinationAddressHash: tx.destinationAddressHash(),
 		}
 
 		// case-insensitive check for transaction type

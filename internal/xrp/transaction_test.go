@@ -7,37 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDestinationAddressHash(t *testing.T) {
-	tests := []struct {
-		name        string
-		destination string
-		expected    string
-	}{
-		{
-			name:        "known address",
-			destination: "r3iE6gLEVq6XXN8ddPWxffcYKJLxG2tC51",
-			expected:    "e6fb5cd2b16caa4a7ce88f404767e111284a74e2c467ee8d20b1456cc45de18a",
-		},
-		{
-			name:        "another address",
-			destination: "rnJrjec2vrTJAAQUTMTjj7U6xdXrk9N4mT",
-			expected:    "e9f8d46cc405736e946e2e299ae9106ef494b7454f802028be9fe665398e69e3",
-		},
-		{
-			name:        "empty destination",
-			destination: "",
-			expected:    "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tx := transaction{Destination: tt.destination}
-			require.Equal(t, tt.expected, tx.destinationAddressHash())
-		})
-	}
-}
-
 func TestTransactionStatus(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -287,5 +256,35 @@ func TestSourceAddressesRoot(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tt.expected, result)
 		})
+	}
+}
+
+func TestDestinationAddressHash(t *testing.T) {
+	tests := []struct {
+		txid                   string
+		address                string
+		destinationAddressHash string
+	}{
+		{
+			address:                "ryouhapPYV5KNHmFUKrjNqsjxhnxvQiVt",
+			destinationAddressHash: "0x8f40c24f58fb0abfe1312837a2345d2294762ca46994acc99ff13ccba01fe1b2",
+		},
+		{
+			address:                "r3iE6gLEVq6XXN8ddPWxffcYKJLxG2tC51",
+			destinationAddressHash: "0x32ba9ed8519cb562a6f845df24258d3d093fab95c049ebe45a25662c226dfb43",
+		},
+		{
+			address:                "",
+			destinationAddressHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
+		},
+	}
+
+	for _, test := range tests {
+		tx := transaction{
+			Destination: test.address,
+		}
+
+		hash := tx.destinationAddressHash()
+		require.Equal(t, test.destinationAddressHash, hash)
 	}
 }

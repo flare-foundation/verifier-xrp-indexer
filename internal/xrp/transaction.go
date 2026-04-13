@@ -94,31 +94,38 @@ func (tx *transaction) isNativePayment() (bool, error) {
 	return amountObj.Currency == xrpCurrency, nil
 }
 
-// destinationAddressHash returns the double-Keccak256 hash of the destination
-// address, matching the standardAddressHash algorithm used by the MCC library.
-// Returns an empty string when no destination is set.
+// destinationAddressHash returns the ABI-encoded Keccak256 hash of the transaction's
+// Destination address, or an empty string if no destination is set.
 func (tx *transaction) destinationAddressHash() string {
-	if tx.Destination == "" {
-		return ""
+	if len(tx.Destination) > 0 {
+		return crypto.Keccak256Hash([]byte(tx.Destination)).Hex()
 	}
 
-	hash := crypto.Keccak256Hash(crypto.Keccak256Hash([]byte(tx.Destination)).Bytes())
-	return strings.ToLower(hash.Hex()[2:])
+	return common.Hash{}.Hex()
 }
 
-// transactionStatus reports whether the transaction was included in the ledger.
-// Returns true for "tes" (success) and "tec" (sender failure) results, false otherwise.
+// transactionStatus returns a numeric status code derived from the transaction's
+// TransactionResult metadata: 0 for success, 1 for destination-related failures,
+// and 2 for all other results.
 func (tx *transaction) transactionStatus() (bool, error) {
-	var m meta
-	if err := json.Unmarshal(tx.MetaData, &m); err != nil {
-		return false, fmt.Errorf("unmarshal metadata: %w", err)
+	var meta struct {
+		TransactionResult string `json:"TransactionResult"`
 	}
 
-	if strings.HasPrefix(m.TransactionResult, "tes") || strings.HasPrefix(m.TransactionResult, "tec") {
+	err := json.Unmarshal(tx.MetaData, &meta)
+	if err != nil {
+		return false, fmt.Errorf("unmarshal meta data: %w", err)
+	}
+
+	switch meta.TransactionResult {
+	case "tesSUCCESS":
 		return true, nil
-	}
+	case "tecDST_TAG_NEEDED", "tecNO_DST", "tecNO_DST_INSUF_XRP", "tecNO_PERMISSION":
+		return true, nil
 
-	return false, nil
+	default:
+		return false, nil
+	}
 }
 
 // intendedReceivingAmount returns the native XRP amount in drops that the
