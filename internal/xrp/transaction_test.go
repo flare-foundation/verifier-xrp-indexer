@@ -261,30 +261,29 @@ func TestSourceAddressesRoot(t *testing.T) {
 
 func TestDestinationAddressHash(t *testing.T) {
 	tests := []struct {
-		txid                   string
-		address                string
-		destinationAddressHash string
+		address  string
+		expected *string
 	}{
 		{
-			address:                "ryouhapPYV5KNHmFUKrjNqsjxhnxvQiVt",
-			destinationAddressHash: "8f40c24f58fb0abfe1312837a2345d2294762ca46994acc99ff13ccba01fe1b2",
+			address:  "ryouhapPYV5KNHmFUKrjNqsjxhnxvQiVt",
+			expected: ptr("8f40c24f58fb0abfe1312837a2345d2294762ca46994acc99ff13ccba01fe1b2"),
 		},
 		{
-			address:                "r3iE6gLEVq6XXN8ddPWxffcYKJLxG2tC51",
-			destinationAddressHash: "32ba9ed8519cb562a6f845df24258d3d093fab95c049ebe45a25662c226dfb43",
+			address:  "r3iE6gLEVq6XXN8ddPWxffcYKJLxG2tC51",
+			expected: ptr("32ba9ed8519cb562a6f845df24258d3d093fab95c049ebe45a25662c226dfb43"),
 		},
 		{
-			address:                "",
-			destinationAddressHash: "",
+			address:  "",
+			expected: nil,
 		},
 	}
 
-	for _, test := range tests {
-		tx := transaction{
-			Destination: test.address,
-		}
-
-		hash := tx.destinationAddressHash()
-		require.Equal(t, test.destinationAddressHash, hash)
+	for _, tt := range tests {
+		tx := transaction{Destination: tt.address}
+		require.Equal(t, tt.expected, tx.destinationAddressHash())
 	}
+}
+
+func ptr(s string) *string {
+	return &s
 }
