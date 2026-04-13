@@ -7,6 +7,108 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestDestinationAddressHash(t *testing.T) {
+	tests := []struct {
+		name        string
+		destination string
+		expected    string
+	}{
+		{
+			name:        "known address",
+			destination: "r3iE6gLEVq6XXN8ddPWxffcYKJLxG2tC51",
+			expected:    "e6fb5cd2b16caa4a7ce88f404767e111284a74e2c467ee8d20b1456cc45de18a",
+		},
+		{
+			name:        "another address",
+			destination: "rnJrjec2vrTJAAQUTMTjj7U6xdXrk9N4mT",
+			expected:    "e9f8d46cc405736e946e2e299ae9106ef494b7454f802028be9fe665398e69e3",
+		},
+		{
+			name:        "empty destination",
+			destination: "",
+			expected:    "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tx := transaction{Destination: tt.destination}
+			require.Equal(t, tt.expected, tx.destinationAddressHash())
+		})
+	}
+}
+
+func TestTransactionStatus(t *testing.T) {
+	tests := []struct {
+		name     string
+		metaData string
+		expected uint8
+	}{
+		{
+			name:     "success",
+			metaData: `{"AffectedNodes":[],"TransactionResult":"tesSUCCESS"}`,
+			expected: StatusSuccess,
+		},
+		{
+			name:     "sender failure tecUNFUNDED_PAYMENT",
+			metaData: `{"AffectedNodes":[],"TransactionResult":"tecUNFUNDED_PAYMENT"}`,
+			expected: StatusSenderFailure,
+		},
+		{
+			name:     "sender failure tecNO_DST",
+			metaData: `{"AffectedNodes":[],"TransactionResult":"tecNO_DST"}`,
+			expected: StatusSenderFailure,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tx := transaction{MetaData: json.RawMessage(tt.metaData)}
+			status, err := tx.transactionStatus()
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, status)
+		})
+	}
+}
+
+func TestIntendedReceivingAmount(t *testing.T) {
+	tests := []struct {
+		name     string
+		amount   string
+		expected uint64
+	}{
+		{
+			name:     "native XRP drops",
+			amount:   `"15000000"`,
+			expected: 15000000,
+		},
+		{
+			name:     "large native amount",
+			amount:   `"100000000000000000"`,
+			expected: 100000000000000000,
+		},
+		{
+			name:     "token amount object",
+			amount:   `{"currency":"USD","issuer":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","value":"100"}`,
+			expected: 0,
+		},
+		{
+			name:     "empty amount",
+			amount:   ``,
+			expected: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tx := transaction{Amount: json.RawMessage(tt.amount)}
+			result, err := tx.intendedReceivingAmount()
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 func TestSourceAddressesRoot(t *testing.T) {
 	tests := []struct {
 		name     string

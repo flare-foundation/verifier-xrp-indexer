@@ -196,10 +196,7 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 			return nil, fmt.Errorf("transaction status for tx %s: %w", tx.Hash, err)
 		}
 
-		transactions[i].DestinationAddressHash, err = tx.destinationAddressHash()
-		if err != nil {
-			return nil, fmt.Errorf("destination address hash for tx %s: %w", tx.Hash, err)
-		}
+		transactions[i].DestinationAddressHash = tx.destinationAddressHash()
 
 		transactions[i].IntendedReceivingAmount, err = tx.intendedReceivingAmount()
 		if err != nil {

@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
@@ -21,13 +20,13 @@ const (
 	paymentType = "Payment"
 )
 
-var stringType, _ = abi.NewType("string", "", nil)
-
-var addressArgument = abi.Arguments{
-	{
-		Type: stringType,
-	},
-}
+const (
+	// StatusSuccess indicates the transaction succeeded (tes-class result).
+	StatusSuccess uint8 = iota
+	// StatusSenderFailure indicates the transaction was included but failed
+	// due to the sender (tec-class result).
+	StatusSenderFailure
+)
 
 type transaction struct {
 	Hash            string                         `json:"hash"`
@@ -103,68 +102,52 @@ func (tx *transaction) isNativePayment() (bool, error) {
 	return amountObj.Currency == xrpCurrency, nil
 }
 
-// destinationAddressHash returns the ABI-encoded Keccak256 hash of the transaction's
-// Destination address, or an empty string if no destination is set.
-func (tx *transaction) destinationAddressHash() (string, error) {
-	if len(tx.Destination) > 0 {
-		encoded, err := addressArgument.Pack(tx.Destination)
-		if err != nil {
-			return "", fmt.Errorf("encoding address: %w", err)
-		}
-
-		return crypto.Keccak256Hash(encoded).String(), nil
+// destinationAddressHash returns the double-Keccak256 hash of the destination
+// address, matching the standardAddressHash algorithm used by the MCC library.
+// Returns an empty string when no destination is set.
+func (tx *transaction) destinationAddressHash() string {
+	if tx.Destination == "" {
+		return ""
 	}
 
-	return "", nil
+	hash := crypto.Keccak256Hash(crypto.Keccak256Hash([]byte(tx.Destination)).Bytes())
+	return strings.ToLower(hash.Hex()[2:])
 }
 
-// intendedReceivingAmount returns the intended receiving amount in XRP drops for native
-// payment transactions, or 0 for non-native (token) payments.
-func (tx *transaction) intendedReceivingAmount() (uint64, error) {
-	native, err := tx.isNativePayment()
-	if err != nil {
-		return 0, fmt.Errorf("is native error: %w", err)
-	}
-
-	if !native {
-		return 0, nil
-	}
-
-	var amountStr string
-	if err := json.Unmarshal(tx.Amount, &amountStr); err != nil {
-		return 0, fmt.Errorf("unmarshal amount str: %w", err)
-	}
-
-	amount, err := strconv.ParseUint(amountStr, 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("parsing amount: %w", err)
-	}
-
-	return amount, nil
-}
-
-// transactionStatus returns a numeric status code derived from the transaction's
-// TransactionResult metadata: 0 for success, 1 for destination-related failures,
-// and 2 for all other results.
+// transactionStatus returns the transaction outcome derived from metadata.
+// On-chain XRP transactions have either a "tes" (success) or "tec" (sender
+// failure) result prefix.
 func (tx *transaction) transactionStatus() (uint8, error) {
-	var meta struct {
-		TransactionResult string `json:"TransactionResult"`
+	var m meta
+	if err := json.Unmarshal(tx.MetaData, &m); err != nil {
+		return 0, fmt.Errorf("unmarshal metadata: %w", err)
 	}
 
-	err := json.Unmarshal(tx.MetaData, &meta)
-	if err != nil {
-		return 0, fmt.Errorf("unmarshal meta data: %w", err)
+	if strings.HasPrefix(m.TransactionResult, "tec") {
+		return StatusSenderFailure, nil
 	}
 
-	switch meta.TransactionResult {
-	case "tesSUCCESS":
+	return StatusSuccess, nil
+}
+
+// intendedReceivingAmount returns the native XRP amount in drops that the
+// sender intended to deliver. Returns 0 for non-native (token) payments.
+func (tx *transaction) intendedReceivingAmount() (uint64, error) {
+	if len(tx.Amount) == 0 || tx.Amount[0] != '"' {
 		return 0, nil
-	case "tecDST_TAG_NEEDED", "tecNO_DST", "tecNO_DST_INSUF_XRP", "tecNO_PERMISSION":
-		return 1, nil
-
-	default:
-		return 2, nil
 	}
+
+	var s string
+	if err := json.Unmarshal(tx.Amount, &s); err != nil {
+		return 0, fmt.Errorf("unmarshal amount: %w", err)
+	}
+
+	drops, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("parse drops: %w", err)
+	}
+
+	return drops, nil
 }
 
 // sourceAddressesRoot computes the Merkle root of the double-Keccak256-hashed addresses

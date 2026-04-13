@@ -37,7 +37,8 @@ type amount struct {
 }
 
 type meta struct {
-	AffectedNodes []affectedNodes `json:"AffectedNodes"`
+	AffectedNodes     []affectedNodes `json:"AffectedNodes"`
+	TransactionResult string          `json:"TransactionResult"`
 }
 
 type affectedNodes struct {
