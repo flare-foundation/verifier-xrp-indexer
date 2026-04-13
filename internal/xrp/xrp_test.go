@@ -84,6 +84,10 @@ func TestXrp(t *testing.T) {
 		require.Empty(t, tx.FirstMemoDataHash)
 		require.Nil(t, tx.DestinationTag)
 
+		require.NotEmpty(t, tx.DestinationAddressHash)
+		require.NotZero(t, tx.IntendedReceivingAmount)
+		require.Equal(t, xrp.StatusSuccess, tx.TransactionStatus)
+
 		require.Empty(t, blockResult.Events)
 	})
 }
