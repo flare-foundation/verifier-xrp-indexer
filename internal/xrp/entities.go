@@ -13,7 +13,7 @@ type Transaction struct {
 	PaymentReference        string `gorm:"index:idx_payref_block,priority:1;type:varchar(64);default:null"`
 	Response                string `gorm:"type:varchar"`
 	IsNativePayment         bool   `gorm:"index"`
-	IntendedReceivingAmount uint64
+	IntendedReceivingAmount uint64 `gorm:"index:idx_payref_block,priority:3;index:idx_dest_block,priority:3"`
 	DestinationAddressHash  string `gorm:"index:idx_dest_block,priority:1;type:varchar(64);default:null"`
 	SourceAddressesRoot     string `gorm:"index;type:varchar(64);default:null"`
 	Sequence                uint64 `gorm:"index:idx_source_sequence,priority:2"`
