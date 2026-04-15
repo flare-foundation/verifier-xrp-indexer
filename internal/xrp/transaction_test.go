@@ -49,27 +49,27 @@ func TestIntendedReceivingAmount(t *testing.T) {
 	tests := []struct {
 		name     string
 		amount   string
-		expected uint64
+		expected *uint64
 	}{
 		{
 			name:     "native XRP drops",
 			amount:   `"15000000"`,
-			expected: 15000000,
+			expected: uint64Ptr(15000000),
 		},
 		{
 			name:     "large native amount",
 			amount:   `"100000000000000000"`,
-			expected: 100000000000000000,
+			expected: uint64Ptr(100000000000000000),
 		},
 		{
 			name:     "token amount object",
 			amount:   `{"currency":"USD","issuer":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","value":"100"}`,
-			expected: 0,
+			expected: uint64Ptr(0),
 		},
 		{
 			name:     "empty amount",
 			amount:   ``,
-			expected: 0,
+			expected: uint64Ptr(0),
 		},
 	}
 
@@ -286,4 +286,8 @@ func TestDestinationAddressHash(t *testing.T) {
 
 func ptr(s string) *string {
 	return &s
+}
+
+func uint64Ptr(v uint64) *uint64 {
+	return &v
 }

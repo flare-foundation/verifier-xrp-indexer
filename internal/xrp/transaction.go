@@ -105,9 +105,9 @@ func (tx *transaction) destinationAddressHash() *string {
 	return nil
 }
 
-// transactionStatus returns a numeric status code derived from the transaction's
-// TransactionResult metadata: 0 for success, 1 for destination-related failures,
-// and 2 for all other results.
+// transactionStatus returns true when the transaction result is tesSUCCESS or a
+// destination-related failure (tecDST_TAG_NEEDED, tecNO_DST, tecNO_DST_INSUF_XRP,
+// tecNO_PERMISSION), and false for all other results.
 func (tx *transaction) transactionStatus() (bool, error) {
 	var meta struct {
 		TransactionResult string `json:"TransactionResult"`
@@ -130,23 +130,24 @@ func (tx *transaction) transactionStatus() (bool, error) {
 }
 
 // intendedReceivingAmount returns the native XRP amount in drops that the
-// sender intended to deliver. Returns 0 for non-native (token) payments.
-func (tx *transaction) intendedReceivingAmount() (uint64, error) {
+// sender intended to deliver. Returns a pointer to 0 for non-native (token) payments.
+func (tx *transaction) intendedReceivingAmount() (*uint64, error) {
 	if len(tx.Amount) == 0 || tx.Amount[0] != '"' {
-		return 0, nil
+		zero := uint64(0)
+		return &zero, nil
 	}
 
 	var s string
 	if err := json.Unmarshal(tx.Amount, &s); err != nil {
-		return 0, fmt.Errorf("unmarshal amount: %w", err)
+		return nil, fmt.Errorf("unmarshal amount: %w", err)
 	}
 
 	drops, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("parse drops: %w", err)
+		return nil, fmt.Errorf("parse drops: %w", err)
 	}
 
-	return drops, nil
+	return &drops, nil
 }
 
 // sourceAddressesRoot computes the Merkle root of the double-Keccak256-hashed addresses

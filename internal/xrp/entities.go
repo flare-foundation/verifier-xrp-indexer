@@ -6,14 +6,17 @@ import (
 
 // Transaction is the database model for an XRP ledger payment transaction.
 type Transaction struct {
-	Hash                    string  `gorm:"primaryKey;type:varchar(64)"`
-	BlockNumber             uint64  `gorm:"index;index:idx_payref_block,priority:2;index:idx_dest_block,priority:2"`
-	Timestamp               uint64  `gorm:"index"`
+	Hash        string `gorm:"primaryKey;type:varchar(64)"`
+	BlockNumber uint64 `gorm:"index;index:idx_payref_block,priority:2;index:idx_dest_block,priority:2"`
+	Timestamp   uint64 `gorm:"index"`
+	// TransactionStatus is true when the transaction result is tesSUCCESS or a
+	// destination-related failure (tecDST_TAG_NEEDED, tecNO_DST, tecNO_DST_INSUF_XRP,
+	// tecNO_PERMISSION), and false for all other results.
 	TransactionStatus       bool    `gorm:"index"`
 	PaymentReference        string  `gorm:"index:idx_payref_block,priority:1;type:varchar(64);default:null"`
 	Response                string  `gorm:"type:varchar"`
 	IsNativePayment         bool    `gorm:"index"`
-	IntendedReceivingAmount uint64  `gorm:"index:idx_payref_block,priority:3;index:idx_dest_block,priority:3"`
+	IntendedReceivingAmount *uint64 `gorm:"index:idx_payref_block,priority:3;index:idx_dest_block,priority:3"`
 	DestinationAddressHash  *string `gorm:"index:idx_dest_block,priority:1;type:varchar(64);default:null"`
 	SourceAddressesRoot     string  `gorm:"index;type:varchar(64);default:null"`
 	Sequence                uint64  `gorm:"index:idx_source_sequence,priority:2"`

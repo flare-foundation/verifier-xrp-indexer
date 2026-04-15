@@ -190,7 +190,6 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 				return nil, fmt.Errorf("isNativePayment: %w", err)
 			}
 			transactions[i].IsNativePayment = isNative
-			transactions[i].DestinationAddressHash = tx.destinationAddressHash()
 
 			transactions[i].IntendedReceivingAmount, err = tx.intendedReceivingAmount()
 			if err != nil {

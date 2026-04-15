@@ -85,7 +85,8 @@ func TestXrp(t *testing.T) {
 		require.Nil(t, tx.DestinationTag)
 
 		require.NotNil(t, tx.DestinationAddressHash)
-		require.NotZero(t, tx.IntendedReceivingAmount)
+		require.NotNil(t, tx.IntendedReceivingAmount)
+		require.NotZero(t, *tx.IntendedReceivingAmount)
 		require.True(t, tx.TransactionStatus)
 
 		require.Empty(t, blockResult.Events)
