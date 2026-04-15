@@ -83,7 +83,8 @@ func (tx *transaction) isNativePayment() (bool, error) {
 		if err := json.Unmarshal(tx.Amount, &amountStr); err != nil {
 			return false, fmt.Errorf("unmarshal amount string: %w", err)
 		}
-		_, err := strconv.Atoi(amountStr)
+
+		_, err := strconv.ParseUint(amountStr, 10, 64)
 		return err == nil, nil
 	}
 
@@ -98,7 +99,7 @@ func (tx *transaction) isNativePayment() (bool, error) {
 // Destination address, or nil if no destination is set.
 func (tx *transaction) destinationAddressHash() *string {
 	if len(tx.Destination) > 0 {
-		hash := crypto.Keccak256Hash([]byte(tx.Destination)).Hex()[2:]
+		hash := strings.ToLower(crypto.Keccak256Hash([]byte(tx.Destination)).Hex()[2:])
 		return &hash
 	}
 
