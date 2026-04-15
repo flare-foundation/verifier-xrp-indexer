@@ -64,12 +64,12 @@ func TestIntendedReceivingAmount(t *testing.T) {
 		{
 			name:     "token amount object",
 			amount:   `{"currency":"USD","issuer":"rf1BiGeXwwQoi8Z2ueFYTEXSwuJYfV2Jpn","value":"100"}`,
-			expected: uint64Ptr(0),
+			expected: nil,
 		},
 		{
 			name:     "empty amount",
 			amount:   ``,
-			expected: uint64Ptr(0),
+			expected: nil,
 		},
 	}
 
@@ -253,6 +253,7 @@ func TestSourceAddressesRoot(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tx := transaction{MetaData: json.RawMessage(tt.metaData)}
 			result, err := tx.sourceAddressesRoot()
+
 			require.NoError(t, err)
 			require.Equal(t, tt.expected, result)
 		})

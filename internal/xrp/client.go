@@ -185,11 +185,10 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 		// case-insensitive check for transaction type
 		if strings.EqualFold(tx.TransactionType, paymentType) {
 			transactions[i].PaymentReference = tx.paymentReference()
-			isNative, err := tx.isNativePayment()
+			transactions[i].IsNativePayment, err = tx.isNativePayment()
 			if err != nil {
-				return nil, fmt.Errorf("isNativePayment: %w", err)
+				return nil, fmt.Errorf("isNativePayment for tx %s: %w", tx.Hash, err)
 			}
-			transactions[i].IsNativePayment = isNative
 
 			transactions[i].IntendedReceivingAmount, err = tx.intendedReceivingAmount()
 			if err != nil {
