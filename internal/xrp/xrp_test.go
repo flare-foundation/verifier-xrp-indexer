@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/flare-foundation/verifier-xrp-indexer/internal/xrp"
+	"github.com/flare-foundation/verifier-xrp-indexer/v2/internal/xrp"
 	"github.com/stretchr/testify/require"
 )
 

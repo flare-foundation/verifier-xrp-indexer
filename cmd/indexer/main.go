@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/flare-foundation/go-flare-common/pkg/logger"
 	"github.com/flare-foundation/verifier-indexer-framework/pkg/framework"
-	"github.com/flare-foundation/verifier-xrp-indexer/internal/xrp"
+	"github.com/flare-foundation/verifier-xrp-indexer/v2/internal/xrp"
 )
 
 func main() {

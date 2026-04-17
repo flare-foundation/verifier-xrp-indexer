@@ -1,11 +1,11 @@
-module github.com/flare-foundation/verifier-xrp-indexer
+module github.com/flare-foundation/verifier-xrp-indexer/v2
 
 go 1.25.8
 
 require (
 	github.com/ethereum/go-ethereum v1.14.12
 	github.com/flare-foundation/go-flare-common v1.2.0
-	github.com/flare-foundation/verifier-indexer-framework v1.1.1-rc.2
+	github.com/flare-foundation/verifier-indexer-framework v1.1.1
 	github.com/stretchr/testify v1.11.1
 )
 

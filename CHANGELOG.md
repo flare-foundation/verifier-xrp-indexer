@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [[Unreleased]]
 
+## [2.0.0] - 2026-04-17
+
 ### Added
 
 - `TransactionStatus` field indicating whether the transaction result is a success or destination-related failure.
