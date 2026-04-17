@@ -21,8 +21,8 @@ github.com/ethereum/go-ethereum v1.14.12 h1:8hl57x77HSUo+cXExrURjU/w1VhL+ShCTJrT
 github.com/ethereum/go-ethereum v1.14.12/go.mod h1:RAC2gVMWJ6FkxSPESfbshrcKpIokgQKsVKmAuqdekDY=
 github.com/flare-foundation/go-flare-common v1.2.0 h1:6xkFMr/qZGMw6ULWw6uaDLhiHls2XK1D/FEVDRFihC8=
 github.com/flare-foundation/go-flare-common v1.2.0/go.mod h1:u844RxubdWw9KNXV+1N6aud6lQsYrhg2nz8acJB9MCw=
-github.com/flare-foundation/verifier-indexer-framework v1.1.0 h1:nZoDOSCjry7ZfALAFnA/AFsRkWp6x3A8A21WNfiM+IA=
-github.com/flare-foundation/verifier-indexer-framework v1.1.0/go.mod h1:XHS/cATTJjZAYmLxfLpjuU2v7G6liuk1pMBd2a5NfHA=
+github.com/flare-foundation/verifier-indexer-framework v1.1.1-rc.0 h1:ssSUNSM4wyCga7g7G4u1k6rSVNEwKsTQ7RSdWYMjeKE=
+github.com/flare-foundation/verifier-indexer-framework v1.1.1-rc.0/go.mod h1:XHS/cATTJjZAYmLxfLpjuU2v7G6liuk1pMBd2a5NfHA=
 github.com/holiman/uint256 v1.3.2 h1:a9EgMPSC1AAaj1SZL5zIQD3WbwTuHrMGOerLjGmM/TA=
 github.com/holiman/uint256 v1.3.2/go.mod h1:EOMSn4q6Nyt9P6efbI3bueV4e1b3dGlUCXeiRV4ng7E=
 github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsIM=
