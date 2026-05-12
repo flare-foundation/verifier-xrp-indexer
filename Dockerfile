@@ -24,4 +24,10 @@ COPY --from=builder /build/PROJECT_VERSION .
 COPY --from=builder /build/PROJECT_BUILD_DATE .
 COPY --from=builder /build/PROJECT_COMMIT_HASH .
 
+RUN addgroup --gid 10001 xrp && \
+    adduser --uid 10001 --gid 10001 --disabled-password --gecos "" xrp && \
+    chown xrp:xrp /app/xrp-indexer
+
+USER xrp
+
 CMD ["./xrp-indexer"]
