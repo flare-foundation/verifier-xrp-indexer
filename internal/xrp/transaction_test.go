@@ -29,6 +29,11 @@ func TestTransactionStatus(t *testing.T) {
 			expected: true,
 		},
 		{
+			name:     "tecNO_PERMISSION without DomainID",
+			metaData: `{"AffectedNodes":[],"TransactionResult":"tecNO_PERMISSION"}`,
+			expected: true,
+		},
+		{
 			name:     "unknown result",
 			metaData: `{"AffectedNodes":[],"TransactionResult":"temBAD_AMOUNT"}`,
 			expected: false,
@@ -43,6 +48,62 @@ func TestTransactionStatus(t *testing.T) {
 			require.Equal(t, tt.expected, status)
 		})
 	}
+}
+
+// TestTransactionStatusFromRawTx verifies transactionStatus end-to-end on the raw
+// JSON of testnet tx C935D183BC7D63C3D91AD8AE73564A42315E2EE0C5C9A4E0B1F67A28F517FE25:
+// a Payment with DomainID that the ledger rejected with tecNO_PERMISSION. This also
+// exercises the JSON binding of the DomainID field.
+func TestTransactionStatusFromRawTx(t *testing.T) {
+	raw := `{
+		"Account": "rGqCqM1djMK19wgn4PwoEmGrpit8T4Akmt",
+		"Amount": "1000000",
+		"DeliverMax": "1000000",
+		"Destination": "rUvJftL8ZkvLveY4b2E2rfkyiG2VPfDTFe",
+		"DomainID": "87BC3EBBE3DB4AE7F40822037BCFF4FDED8B59F949594AC8BE4A0E40CF9DA226",
+		"Fee": "12",
+		"Flags": 0,
+		"LastLedgerSequence": 17501605,
+		"Sequence": 17501583,
+		"SigningPubKey": "EDEE63EC44DC59A8C5CAA91268446E0BAAD96F8D2601CF329F3E572B294D60BC7F",
+		"TransactionType": "Payment",
+		"TxnSignature": "5CA4E52DAC85708B77529FB4857A944171A82BBA152F8DFECB90E99C542105560864DC20F8F1AA414144E96ACFA5DA6443E4FF962BD0D8FDDE1E887481F8AD06",
+		"hash": "C935D183BC7D63C3D91AD8AE73564A42315E2EE0C5C9A4E0B1F67A28F517FE25",
+		"metaData": {
+			"AffectedNodes": [
+				{
+					"ModifiedNode": {
+						"FinalFields": {
+							"Account": "rGqCqM1djMK19wgn4PwoEmGrpit8T4Akmt",
+							"Balance": "99999988",
+							"Flags": 0,
+							"OwnerCount": 0,
+							"Sequence": 17501584
+						},
+						"LedgerEntryType": "AccountRoot",
+						"LedgerIndex": "BC30C5B2B5C55A57E7EB170058627077E9EA175C194AF60A015B996DF4C564EF",
+						"PreviousFields": {
+							"Balance": "100000000",
+							"Sequence": 17501583
+						},
+						"PreviousTxnID": "EFBB0CDC7F819909876D997F845C35DA193B5BA8BE6D82D3ED3BA09D0F66285D",
+						"PreviousTxnLgrSeq": 17501583
+					}
+				}
+			],
+			"TransactionIndex": 1,
+			"TransactionResult": "tecNO_PERMISSION"
+		}
+	}`
+
+	var tx transaction
+	require.NoError(t, json.Unmarshal([]byte(raw), &tx))
+	require.NotNil(t, tx.DomainID)
+	require.Equal(t, "87BC3EBBE3DB4AE7F40822037BCFF4FDED8B59F949594AC8BE4A0E40CF9DA226", *tx.DomainID)
+
+	status, err := tx.transactionStatus()
+	require.NoError(t, err)
+	require.False(t, status)
 }
 
 func TestIntendedReceivingAmount(t *testing.T) {

@@ -29,6 +29,7 @@ type transaction struct {
 	Account         string                         `json:"Account"`
 	Amount          json.RawMessage                `json:"Amount"`
 	MetaData        json.RawMessage                `json:"metaData"`
+	DomainID        *string                        `json:"DomainID"`
 	Destination     string                         `json:"Destination"`
 	DestinationTag  *uint32                        `json:"DestinationTag"`
 }
@@ -107,8 +108,8 @@ func (tx *transaction) destinationAddressHash() *string {
 }
 
 // transactionStatus returns true when the transaction result is tesSUCCESS or a
-// destination-related failure (tecDST_TAG_NEEDED, tecNO_DST, tecNO_DST_INSUF_XRP,
-// tecNO_PERMISSION), and false for all other results.
+// destination-related failure (tecDST_TAG_NEEDED, tecNO_DST, tecNO_DST_INSUF_XRP, and
+// tecNO_PERMISSION without set DomainID), and false for all other results.
 func (tx *transaction) transactionStatus() (bool, error) {
 	var meta struct {
 		TransactionResult string `json:"TransactionResult"`
@@ -122,7 +123,12 @@ func (tx *transaction) transactionStatus() (bool, error) {
 	switch meta.TransactionResult {
 	case "tesSUCCESS":
 		return true, nil
-	case "tecDST_TAG_NEEDED", "tecNO_DST", "tecNO_DST_INSUF_XRP", "tecNO_PERMISSION":
+	case "tecDST_TAG_NEEDED", "tecNO_DST", "tecNO_DST_INSUF_XRP":
+		return true, nil
+	case "tecNO_PERMISSION":
+		if tx.DomainID != nil {
+			return false, nil
+		}
 		return true, nil
 
 	default:
