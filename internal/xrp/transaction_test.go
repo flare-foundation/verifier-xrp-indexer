@@ -106,6 +106,97 @@ func TestTransactionStatusFromRawTx(t *testing.T) {
 	require.False(t, status)
 }
 
+// TestIsNativePaymentFromRawTx verifies isNativePayment on the raw JSON of real
+// testnet transactions.
+func TestIsNativePaymentFromRawTx(t *testing.T) {
+	tests := []struct {
+		name     string
+		raw      string
+		expected bool
+	}{
+		{
+			// XRP-drops Amount, no SendMax.
+			name: "native xrp to xrp",
+			raw: `{
+				"Account": "raVKHJGAo9YpeKgAHjN8XCHyfYwiyzirvY",
+				"Amount": "100120",
+				"DeliverMax": "100120",
+				"Destination": "rJG3Xu7efRiJUfHX81D6vtoKjGKkeyp9XX",
+				"DestinationTag": 1857044189,
+				"Fee": "12",
+				"Flags": 0,
+				"LastLedgerSequence": 17870400,
+				"Sequence": 17445749,
+				"TransactionType": "Payment",
+				"hash": "585310057EE0F00A926EC11A81E7F6C8FC6CD058ADB18594D85083EF4AA6F562"
+			}`,
+			expected: true,
+		},
+		{
+			// XRP-drops Amount but SendMax in USD: cross-currency, not native.
+			name: "cross-currency with SendMax",
+			raw: `{
+				"Account": "rBBUxL9d68WF6pxEczcfNCY4fNqtDPC8be",
+				"Amount": "1000000",
+				"DeliverMax": "1000000",
+				"Destination": "rLe7NgT7GhbLGJ7RUfrH7zQezutWyNU3Md",
+				"DomainID": "FC052BBC0585BFEE8730FFFB31D9E9888A5D5CE15242C4522C690B1317C90A2B",
+				"Fee": "12",
+				"Flags": 0,
+				"LastLedgerSequence": 17281396,
+				"SendMax": {"currency": "USD", "issuer": "rQDqYo6X5gNJjHHGfbWQYcBZVFNcySXiC9", "value": "5"},
+				"Sequence": 17281363,
+				"TransactionType": "Payment",
+				"hash": "CB7E1D062D8E08650B54E4C904ED3344B7CC52EB8CF6CF053AC265BBD2D4CA66"
+			}`,
+			expected: false,
+		},
+		{
+			// IOU (USD token) Amount object, currency != XRP.
+			name: "iou transfer",
+			raw: `{
+				"Account": "rGbzc1r3QZHeU7KyEDVAYvzX4ckBD7Shoy",
+				"Amount": {"currency": "USD", "issuer": "rGbzc1r3QZHeU7KyEDVAYvzX4ckBD7Shoy", "value": "10"},
+				"Destination": "rsHyEm3apWSEF1fLg7XJe7jZxpdzXevpqk",
+				"Fee": "12",
+				"Flags": 0,
+				"LastLedgerSequence": 17870538,
+				"Sequence": 17870514,
+				"TransactionType": "Payment",
+				"hash": "FBC93B0F9721D255A19BD113ADC0B4A446987CBF1818990C78E981AF81A41967"
+			}`,
+			expected: false,
+		},
+		{
+			// MPT Amount object: no currency field, so not XRP.
+			name: "mpt transfer",
+			raw: `{
+				"Account": "rGbzc1r3QZHeU7KyEDVAYvzX4ckBD7Shoy",
+				"Amount": {"mpt_issuance_id": "0110AEB3AB2820761E65E8052FE81907B390764AA5BB3B75", "value": "10"},
+				"Destination": "rsHyEm3apWSEF1fLg7XJe7jZxpdzXevpqk",
+				"Fee": "12",
+				"Flags": 0,
+				"LastLedgerSequence": 17870544,
+				"Sequence": 17870516,
+				"TransactionType": "Payment",
+				"hash": "855144D6960720E9582981DB0E8A9CE55161531C7A5FD8A9EF3B84B49CC8F12F"
+			}`,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var tx transaction
+			require.NoError(t, json.Unmarshal([]byte(tt.raw), &tx))
+
+			native, err := tx.isNativePayment()
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, native)
+		})
+	}
+}
+
 func TestIntendedReceivingAmount(t *testing.T) {
 	tests := []struct {
 		name     string

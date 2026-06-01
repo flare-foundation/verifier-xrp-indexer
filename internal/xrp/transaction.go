@@ -28,6 +28,7 @@ type transaction struct {
 	TicketSequence  uint64                         `json:"TicketSequence"`
 	Account         string                         `json:"Account"`
 	Amount          json.RawMessage                `json:"Amount"`
+	SendMax         json.RawMessage                `json:"SendMax"`
 	MetaData        json.RawMessage                `json:"metaData"`
 	DomainID        *string                        `json:"DomainID"`
 	Destination     string                         `json:"Destination"`
@@ -70,11 +71,14 @@ func (tx *transaction) paymentReference() string {
 	return ""
 }
 
-// isNativePayment reports whether the transaction Amount represents a native XRP drop
-// value (a quoted integer string) rather than a token amount (a JSON object).
+// isNativePayment reports whether the transaction is native XRP transfer.
 func (tx *transaction) isNativePayment() (bool, error) {
 	if len(tx.Amount) == 0 {
 		return false, errors.New("empty Amount field")
+	}
+
+	if tx.SendMax != nil {
+		return false, nil
 	}
 
 	// XRP native amounts are JSON strings of digits ("1000000").
