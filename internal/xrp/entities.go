@@ -12,10 +12,12 @@ type Transaction struct {
 	// TransactionStatus is true when the transaction result is tesSUCCESS or a
 	// destination-related failure (tecDST_TAG_NEEDED, tecNO_DST, tecNO_DST_INSUF_XRP, and
 	// tecNO_PERMISSION without defined DomainID), and false for all other results.
-	TransactionStatus       bool    `gorm:"index"`
-	PaymentReference        string  `gorm:"index:idx_payref_block,priority:1;type:varchar(64);default:null"`
-	Response                string  `gorm:"type:varchar"`
-	IsNativePayment         bool    `gorm:"index"`
+	TransactionStatus bool   `gorm:"index"`
+	PaymentReference  string `gorm:"index:idx_payref_block,priority:1;type:varchar(64);default:null"`
+	Response          string `gorm:"type:varchar"`
+	IsNativePayment   bool   `gorm:"index"`
+	// IntendedReceivingAmount is the intended drops of a native XRP payment,
+	// zero for a non-native payment (see client.go) and null for a non-payment.
 	IntendedReceivingAmount *uint64 `gorm:"index:idx_payref_block,priority:3;index:idx_dest_block,priority:3"`
 	DestinationAddressHash  *string `gorm:"index:idx_dest_block,priority:1;type:varchar(64);default:null"`
 	SourceAddressesRoot     string  `gorm:"index;type:varchar(64);default:null"`

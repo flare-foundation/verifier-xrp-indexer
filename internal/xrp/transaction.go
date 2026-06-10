@@ -140,8 +140,9 @@ func (tx *transaction) transactionStatus() (bool, error) {
 	}
 }
 
-// intendedReceivingAmount returns the native XRP amount in drops that the
-// sender intended to deliver. Returns nil for non-native (token) payments.
+// intendedReceivingAmount returns the drops in the transaction's Amount field,
+// or nil when Amount is not a drops string. Callers must check isNativePayment
+// first: a cross-currency payment can also state its Amount in drops.
 func (tx *transaction) intendedReceivingAmount() (*uint64, error) {
 	if len(tx.Amount) == 0 || tx.Amount[0] != '"' {
 		return nil, nil

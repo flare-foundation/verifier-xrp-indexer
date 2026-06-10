@@ -195,9 +195,16 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 				return nil, fmt.Errorf("isNativePayment for tx %s: %w", tx.Hash, err)
 			}
 
-			transactions[i].IntendedReceivingAmount, err = tx.intendedReceivingAmount()
-			if err != nil {
-				return nil, fmt.Errorf("intended receiving amount for tx %s: %w", tx.Hash, err)
+			if transactions[i].IsNativePayment {
+				transactions[i].IntendedReceivingAmount, err = tx.intendedReceivingAmount()
+				if err != nil {
+					return nil, fmt.Errorf("intended receiving amount for tx %s: %w", tx.Hash, err)
+				}
+			} else {
+				// zero keeps non-native payments out of the nonexistence amount
+				// filter: a sender can force one to fail with a receiver-fault
+				// code, and a failed payment counts with its stated Amount
+				transactions[i].IntendedReceivingAmount = new(uint64)
 			}
 		}
 

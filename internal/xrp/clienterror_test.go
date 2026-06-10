@@ -89,6 +89,40 @@ func TestLedgerNotFoundMapsToErrBlockNotFound(t *testing.T) {
 	require.ErrorIs(t, err, indexer.ErrBlockNotFound)
 }
 
+func TestIntendedReceivingAmountMapping(t *testing.T) {
+	meta := `"metaData":{"TransactionResult":"tesSUCCESS","AffectedNodes":[]}`
+	body := `{"result":{"status":"success","validated":true,"ledger_index":100,"ledger_hash":"AB","ledger":{"close_time":500,"transactions":[
+		{"hash":"A1","TransactionType":"Payment","Account":"rSender","Destination":"rDest","Amount":"5000000",` + meta + `},
+		{"hash":"A2","TransactionType":"Payment","Account":"rSender","Destination":"rDest","Amount":"5000000","SendMax":{"currency":"USD","issuer":"rIssuer","value":"5"},` + meta + `},
+		{"hash":"A3","TransactionType":"Payment","Account":"rSender","Destination":"rDest","Amount":{"currency":"USD","issuer":"rIssuer","value":"5"},` + meta + `},
+		{"hash":"A4","TransactionType":"AccountSet","Account":"rSender",` + meta + `}
+	]}}}`
+
+	client, _ := newRPCStub(t, body)
+
+	result, err := client.GetBlockResult(t.Context(), 100)
+	require.NoError(t, err)
+	require.Len(t, result.Transactions, 4)
+
+	native := result.Transactions[0]
+	require.True(t, native.IsNativePayment)
+	require.Equal(t, new(uint64(5000000)), native.IntendedReceivingAmount)
+
+	// A cross-currency payment delivering XRP states its Amount in drops but
+	// can carry tfPartialPayment; the indexed amount must be zero.
+	crossCurrency := result.Transactions[1]
+	require.False(t, crossCurrency.IsNativePayment)
+	require.Equal(t, new(uint64), crossCurrency.IntendedReceivingAmount)
+
+	iou := result.Transactions[2]
+	require.False(t, iou.IsNativePayment)
+	require.Equal(t, new(uint64), iou.IntendedReceivingAmount)
+
+	nonPayment := result.Transactions[3]
+	require.False(t, nonPayment.IsNativePayment)
+	require.Nil(t, nonPayment.IntendedReceivingAmount)
+}
+
 func TestLedgerRPCErrorIsNotBlockNotFound(t *testing.T) {
 	client, _ := newRPCStub(t, `{"result":{"error":"internal","error_code":73,"error_message":"Internal error.","status":"error"}}`)
 
