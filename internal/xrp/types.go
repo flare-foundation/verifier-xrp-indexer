@@ -20,6 +20,7 @@ type ledgerResponse struct {
 
 type ledgerResult struct {
 	Status       string `json:"status"`
+	Error        string `json:"error,omitempty"`
 	ErrorMessage string `json:"error_message,omitempty"`
 	LedgerIndex  uint64 `json:"ledger_index"`
 	LedgerHash   string `json:"ledger_hash"`

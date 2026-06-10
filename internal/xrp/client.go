@@ -16,6 +16,9 @@ import (
 	"github.com/flare-foundation/verifier-indexer-framework/pkg/indexer"
 )
 
+// errCodeLedgerNotFound is rippled's error code for a ledger the node does not have.
+const errCodeLedgerNotFound = "lgrNotFound"
+
 type xrpClient struct {
 	client *http.Client
 	url    string
@@ -99,8 +102,16 @@ func (c *xrpClient) getLedgerResponse(ctx context.Context, params ledgerParams) 
 	}
 
 	if respStruct.Result.Status != "success" {
-		logger.Debugf("ledger RPC error detail: status=%s message=%s", respStruct.Result.Status, respStruct.Result.ErrorMessage)
-		return nil, fmt.Errorf("ledger RPC request failed (status: %s)", respStruct.Result.Status)
+		logger.Debugf(
+			"ledger RPC error detail: status=%s error=%s message=%s",
+			respStruct.Result.Status, respStruct.Result.Error, respStruct.Result.ErrorMessage,
+		)
+
+		if respStruct.Result.Error == errCodeLedgerNotFound {
+			return nil, indexer.ErrBlockNotFound
+		}
+
+		return nil, fmt.Errorf("ledger RPC request failed (status: %s, error: %s)", respStruct.Result.Status, respStruct.Result.Error)
 	}
 
 	return &respStruct, nil
