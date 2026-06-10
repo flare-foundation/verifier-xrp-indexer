@@ -1,6 +1,6 @@
 version: "2"
 run:
-  go: "1.25.8"
+  go: "1.26"
   modules-download-mode: readonly
 linters:
   default: standard
@@ -16,6 +16,7 @@ linters:
     - exhaustive
     - exptostd
     - forcetypeassert
+    - godot
     - misspell
     - nolintlint
     - unconvert
