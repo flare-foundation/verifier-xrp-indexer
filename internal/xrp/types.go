@@ -2,16 +2,28 @@ package xrp
 
 import "encoding/json"
 
+// apiVersion is the rippled JSON-RPC API version pinned in every request so
+// behavior does not depend on the node's default. The response parsing relies
+// on the version 1 format: with version 2 the ledger method returns expanded
+// transactions as {hash, tx_json, meta} objects (metaData becomes meta) and
+// Payment's Amount is renamed to DeliverMax.
+const apiVersion = 1
+
 type xrpRequest struct {
 	Method string `json:"method"`
 	Params []any  `json:"params"`
 }
 
 type ledgerParams struct {
+	APIVersion   int    `json:"api_version"`
 	LedgerIndex  string `json:"ledger_index"`
 	Transactions bool   `json:"transactions"`
 	Expand       bool   `json:"expand"`
 	OwnerFunds   bool   `json:"owner_funds"`
+}
+
+type serverInfoParams struct {
+	APIVersion int `json:"api_version"`
 }
 
 type ledgerResponse struct {
@@ -86,6 +98,7 @@ type serverInfo struct {
 }
 
 var getLatestParams = ledgerParams{
+	APIVersion:   apiVersion,
 	LedgerIndex:  "validated",
 	Transactions: false,
 	Expand:       false,
@@ -94,4 +107,5 @@ var getLatestParams = ledgerParams{
 
 var getServerState = xrpRequest{
 	Method: "server_info",
+	Params: []any{serverInfoParams{APIVersion: apiVersion}},
 }

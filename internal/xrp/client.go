@@ -125,6 +125,7 @@ func (c *xrpClient) GetLatestBlockInfo(ctx context.Context) (*indexer.BlockInfo,
 // GetBlockTimestamp returns the Unix close time of the ledger at blockNum.
 func (c *xrpClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uint64, error) {
 	getBlockParams := ledgerParams{
+		APIVersion:   apiVersion,
 		LedgerIndex:  strconv.FormatUint(blockNum, 10),
 		Transactions: false,
 		Expand:       false,
@@ -141,6 +142,7 @@ func (c *xrpClient) GetBlockTimestamp(ctx context.Context, blockNum uint64) (uin
 // GetBlockResult returns the block header and all transactions for the ledger at blockNum.
 func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*indexer.BlockResult[*Block, Transaction, struct{}], error) {
 	getBlockParams := ledgerParams{
+		APIVersion:   apiVersion,
 		LedgerIndex:  strconv.FormatUint(blockNum, 10),
 		Transactions: true,
 		Expand:       true,
