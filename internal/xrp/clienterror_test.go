@@ -130,3 +130,48 @@ func TestLedgerRPCErrorIsNotBlockNotFound(t *testing.T) {
 	require.NotErrorIs(t, err, indexer.ErrBlockNotFound)
 	require.ErrorContains(t, err, "internal")
 }
+
+func TestUnprocessableTransactionsAreInvalidData(t *testing.T) {
+	envelope := func(tx string) string {
+		return `{"result":{"status":"success","validated":true,"ledger_index":100,"ledger_hash":"AB","ledger":{"close_time":500,"transactions":[` + tx + `]}}}`
+	}
+	meta := `"metaData":{"TransactionResult":"tesSUCCESS","AffectedNodes":[]}`
+
+	tests := []struct {
+		name string
+		tx   string
+	}{
+		{
+			name: "transaction field type mismatch",
+			tx:   `{"hash":"A1","TransactionType":"Payment","Account":"rS","Sequence":"not-a-number",` + meta + `}`,
+		},
+		{
+			name: "memo data is not hex",
+			tx:   `{"hash":"A1","TransactionType":"Payment","Account":"rS","Amount":"100",` + meta + `,"Memos":[{"Memo":{"MemoData":"zz"}}]}`,
+		},
+		{
+			name: "unparsable account root balance",
+			tx: `{"hash":"A1","TransactionType":"Payment","Account":"rS","Amount":"100","metaData":{"TransactionResult":"tesSUCCESS",` +
+				`"AffectedNodes":[{"ModifiedNode":{"LedgerEntryType":"AccountRoot","FinalFields":{"Account":"rS","Balance":"not-a-number"}}}]}}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			client, _ := newRPCStub(t, envelope(tc.tx))
+
+			_, err := client.GetBlockResult(t.Context(), 100)
+			require.ErrorIs(t, err, indexer.ErrInvalidData)
+		})
+	}
+}
+
+func TestMalformedEnvelopeIsNotInvalidData(t *testing.T) {
+	// A response that fails to parse at the envelope level may be a transient
+	// transport problem and must stay retryable.
+	client, _ := newRPCStub(t, `{"result": garbage`)
+
+	_, err := client.GetBlockResult(t.Context(), 100)
+	require.Error(t, err)
+	require.NotErrorIs(t, err, indexer.ErrInvalidData)
+}
