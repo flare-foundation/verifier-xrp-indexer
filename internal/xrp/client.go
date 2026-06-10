@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
@@ -28,13 +27,6 @@ type xrpClient struct {
 func New(cfg *Config) (indexer.BlockchainClient[*Block, Transaction, struct{}], error) {
 	if cfg.Url == "" {
 		return nil, errors.New("url must be provided")
-	}
-
-	configPath := configFilePath()
-	if data, err := os.ReadFile(configPath); err == nil {
-		logger.Debugf("Config file (%s):\n%s", configPath, string(data))
-	} else {
-		logger.Debugf("Could not read config file %s: %v", configPath, err)
 	}
 
 	return &xrpClient{
