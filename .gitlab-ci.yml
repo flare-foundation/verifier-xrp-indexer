@@ -1,36 +1,40 @@
-variables:
-  GOPATH: /go
-  GOLANG_VERSION: "1.25.8"
-  GOLINT_VERSION: "v2.11.4"
-  COVERAGE_FILE: "coverage.out"
-  COBERTURA_FILE: "coverage.xml"
-
-.gocache:
-  key: ${CI_COMMIT_REF_SLUG}
-  policy: pull-push
-  paths:
-    - ${GOPATH}/pkg/mod
-    - ${GOPATH}/bin
+stages:
+  - build
+  - test
+  - sbom
 
 workflow:
   rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-    - if: $CI_PIPELINE_SOURCE == 'push'
-    - if: $CI_COMMIT_TAG
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_TAG
 
-build:
-  stage: build
-  image: golang:${GOLANG_VERSION}
-  needs: []
-  cache: !reference [.gocache]
-  script:
-    - go mod download
-    - go build ./...
+default:
+  tags:
+    - flarenetwork
+  artifacts:
+    expire_in: 3 days
+
+include:
+  - component: gitlab.com/flarenetwork/ci-components-private/lgtm@2
+  - component: gitlab.com/flarenetwork/ci-components-private/dependency-track@2
+  - template: Jobs/Secret-Detection.latest.gitlab-ci.yml
+  - component: gitlab.com/flarenetwork/ci-components-private/lint-dockerfile@2
+  - component: gitlab.com/flarenetwork/ci-components-private/lint-shell@2
+  - component: gitlab.com/flarenetwork/ci-components-private/lint-go@2
+    inputs:
+      go_version: "1.25.8"
+      golangci_config_file: ".golangci.yml"
+
+variables:
+  GOLANG_VERSION: "1.25.8"
+  GOPATH: $CI_PROJECT_DIR/.go
+  GOCACHE: $CI_PROJECT_DIR/.cache/go-cache
+  COVERAGE_FILE: "coverage.out"
+  COBERTURA_FILE: "coverage.xml"
 
 build-xrpld:
   stage: build
   image: docker:24
+  tags: []
   services:
     - docker:24-dind
   variables:
@@ -40,26 +44,32 @@ build-xrpld:
     - docker build -f Dockerfile.xrpld-ci -t "$CI_REGISTRY_IMAGE/xrpld-ci:latest" .
     - docker push "$CI_REGISTRY_IMAGE/xrpld-ci:latest"
 
-lint:
-  stage: test
-  needs: [build]
-  image: golangci/golangci-lint:${GOLINT_VERSION}
-  cache: !reference [.gocache]
-  script:
-    - ./gofmt_check.sh
-    - golangci-lint run --timeout 5m0s
-
 test:
   stage: test
   image: golang:${GOLANG_VERSION}
-  needs: [build]
-  cache: !reference [.gocache]
+  needs: ["build-xrpld"]
+  cache:
+    - key:
+        files:
+          - go.sum
+        prefix: go-mod
+      paths:
+        - ${GOPATH}/pkg/mod
+        - ${GOPATH}/bin
+    - key:
+        files:
+          - go.sum
+        prefix: go-cache-${GOLANG_VERSION}
+      paths:
+        - ${GOCACHE}
   services:
     - name: $CI_REGISTRY_IMAGE/xrpld-ci:latest
       alias: xrpld
   variables:
     XRP_RPC_URL: http://xrpld:5005
   before_script:
+    - mkdir -p ${GOPATH} ${GOCACHE}
+    - export PATH="${GOPATH}/bin:${PATH}"
     - go install github.com/boumenot/gocover-cobertura@v1.4.0
   script:
     - go mod download

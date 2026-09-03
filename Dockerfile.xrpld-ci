@@ -1,6 +1,11 @@
+# checkov:skip=CKV_DOCKER_3:Test-only xrpld standalone node used in CI, not a production image
+# checkov:skip=CKV_DOCKER_7:Intentionally tracking latest xrpld for CI testing
+# hadolint ignore=DL3007
 FROM xrpllabsofficial/xrpld:latest
 COPY rippled-standalone.cfg /etc/opt/ripple/rippled.cfg
-RUN apt-get update && apt-get install -y curl
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 
 CMD ["--standalone", "--start"]
 

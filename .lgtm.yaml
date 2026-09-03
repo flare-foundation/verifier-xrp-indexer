@@ -1,0 +1,3 @@
+ignore:
+  - check_id: C-004-0002
+    reason: "Custom go test job is used."

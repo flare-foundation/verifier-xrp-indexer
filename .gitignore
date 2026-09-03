@@ -11,3 +11,5 @@ PROJECT_VERSION
 
 # Test data dir
 data-standalone/
+
+.idea
