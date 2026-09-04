@@ -1,0 +1,12 @@
+# allowlist: only what the image builds need
+*
+!go.mod
+!go.sum
+!cmd
+!internal
+**/*_test.go
+**/.snapshots
+# version stamping (git describe / rev-parse)
+!.git
+# Dockerfile.xrpld-ci shares this context
+!rippled-standalone.cfg
