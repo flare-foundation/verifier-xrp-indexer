@@ -8,7 +8,7 @@ history_drop = 13600
 history_drop_frequency = 600
 
 [indexer]
-confirmations = 1
+confirmations = 3
 max_block_range = 100
 max_concurrency = 1
 start_block_number = 100000000

@@ -63,7 +63,7 @@ history_drop = 3600 # delete all historic data in database older than this value
 history_drop_frequency = 600 # frequency of history drops, in seconds
 
 [indexer]
-confirmations = 1 # number of confirmed blocks before the data is included in the DB; raise above the backend skew of load-balanced public endpoints, see below
+confirmations = 3 # number of confirmed blocks before the data is included in the DB; keep above the backend skew of load-balanced public endpoints, see below
 max_block_range = 100 # size of a batch to be repeatedly queried and saved in a dataset
 max_concurrency = 10 # number of concurrent processes querying data from the RPC node
 start_block_number = 780000
@@ -88,8 +88,9 @@ console = true
 Unknown keys in the config file are logged as a warning at startup and ignored, so check the log after editing it.
 
 Public XRPL endpoints such as `xrplcluster.com` or the altnet cluster are load balanced.
-Their backends can disagree on the latest validated ledger, and a ledger that a lagging backend does not have yet is reported as not found, which the indexer treats as permanent and exits on.
-Keep `confirmations` above the expected skew when using such an endpoint; a dedicated node is not affected.
+Their backends can disagree on the latest validated ledger, and a ledger that a lagging backend does not have yet is reported as not found.
+The indexer retries such a ledger for up to `backoff_max_elapsed_time_seconds` before it exits, and each retry stalls the batch, so keep `confirmations` above the usual skew when using such an endpoint.
+Validated ledgers are final, so on XRPL `confirmations` only costs one ledger of delay each; a dedicated node is not affected.
 
 ### Running the code
 

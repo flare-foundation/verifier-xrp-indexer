@@ -22,6 +22,7 @@ and this project adheres to
 - A signal-initiated shutdown exits zero.
 - `api_version` 1 is pinned in every rippled request so parsing does not depend on the node's default API version.
 - The RPC client keeps every idle connection to the node instead of the default two per host, so concurrent fetches no longer re-handshake on each batch.
+- The shipped configurations set `confirmations = 3`. Public XRPL endpoints are load balanced and their backends were measured two ledgers apart; at `confirmations = 1` a ledger a lagging backend did not have yet was reported not found and the indexer exited on it. Such a ledger is now retried for the backoff window before the indexer exits (framework).
 
 ### Fixed
 
