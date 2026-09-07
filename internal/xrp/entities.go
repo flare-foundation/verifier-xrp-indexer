@@ -63,9 +63,9 @@ func (b *Block) HistoryDropOrder() []database.Deletable {
 	var block Block
 	var tx Transaction
 
-	// The order does not particularly matter since there are no foreign key constraints.
+	// Blocks first: the API gates coverage on the block row, so a block must never outlive its transactions.
 	return []database.Deletable{
-		&tx,
 		&block,
+		&tx,
 	}
 }

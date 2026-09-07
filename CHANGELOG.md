@@ -25,6 +25,7 @@ and this project adheres to
 
 ### Fixed
 
+- History drop deletes blocks before transactions. The previous order left block rows whose transactions were already gone for the duration of a drop, and indefinitely after a crash mid-drop; the verifier API gates coverage on the block row alone, so a payment in that window could be attested as nonexistent.
 - A `start_block_number` the node has pruned no longer crash-loops: rippled's `lgrNotFound` for a numeric ledger index is reported as the framework's block-not-found sentinel and the oldest available ledger is used instead. `lgrNotFound` for the latest validated ledger stays transient.
 - Transactions in a validated ledger that cannot be parsed abort the indexer immediately with a clear error instead of being retried for the full backoff window.
 - The error for a not-yet-validated ledger no longer includes the whole ledger response.
