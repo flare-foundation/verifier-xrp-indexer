@@ -25,6 +25,6 @@ enabled = false # opt-in GET /health readiness endpoint, see README
 listen_address = ":8080"
 
 [logger]
-level = "DEBUG"
-file = "logs/xrp_indexer.log"
+level = "INFO"   # DEBUG adds a line per quiet poll and per chain-head move
 console = true
+# file = "logs/xrp_indexer.log" # rotated at 100 MB, rotated files are never deleted: use only with external rotation

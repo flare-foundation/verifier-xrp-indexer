@@ -89,7 +89,7 @@ func (c *xrpClient) getResponse(ctx context.Context, request xrpRequest) ([]byte
 
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			logger.Errorf("error closing response body: %v", err)
+			logger.Debugf("error closing response body: %v", err)
 		}
 	}()
 
@@ -197,8 +197,6 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 	}
 
 	transactions := make([]Transaction, len(respStruct.Result.Ledger.Transactions))
-
-	logger.Debugf("Processing ledger %d with %d transactions", blockNum, len(respStruct.Result.Ledger.Transactions))
 
 	for i := range transactions {
 		var tx transaction

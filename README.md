@@ -80,12 +80,13 @@ enabled = false # opt-in GET /health readiness endpoint, see below
 listen_address = ":8080"
 
 [logger]
-level = "DEBUG"
-file = "logs/xrp_indexer.log"
+level = "INFO"
 console = true
 ```
 
 Unknown keys in the config file are logged as a warning at startup and ignored, so check the log after editing it.
+Logs go to the console at `INFO`, one line per indexed batch and per history drop, so the container runtime collects and rotates them.
+A file sink (`file = "logs/xrp_indexer.log"`) is available, but its rotated files are never deleted, so use it only with external rotation.
 
 Public XRPL endpoints such as `xrplcluster.com` or the altnet cluster are load balanced.
 Their backends can disagree on the latest validated ledger, and a ledger that a lagging backend does not have yet is reported as not found.
