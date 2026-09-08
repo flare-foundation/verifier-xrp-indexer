@@ -1,11 +1,13 @@
 package xrp
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/flare-foundation/verifier-indexer-framework/pkg/indexer"
 	"github.com/stretchr/testify/assert"
@@ -197,4 +199,37 @@ func TestNotValidatedLedgerIsTransientAndTerse(t *testing.T) {
 	require.NotErrorIs(t, err, indexer.ErrBlockNotFound)
 	require.NotErrorIs(t, err, indexer.ErrInvalidData)
 	require.NotContains(t, err.Error(), marker)
+}
+
+func TestNewRejectsRelativeURL(t *testing.T) {
+	for _, u := range []string{"localhost:5005", "/rpc", "s1.ripple.com"} {
+		t.Run(u, func(t *testing.T) {
+			_, err := New(&Config{URL: u})
+			require.ErrorContains(t, err, "scheme and host")
+		})
+	}
+}
+
+func TestTransportErrorsRedactTheURL(t *testing.T) {
+	server := httptest.NewServer(http.NotFoundHandler())
+	server.Close() // nothing listens: every request fails at dial
+
+	client, err := New(&Config{URL: server.URL + "/SECRETKEY/mainnet?apikey=SECRETKEY"})
+	require.NoError(t, err)
+
+	_, err = client.GetServerInfo(t.Context())
+	require.Error(t, err)
+	assert.NotContains(t, err.Error(), "SECRETKEY")
+	assert.Contains(t, err.Error(), "send request to "+server.URL)
+}
+
+func TestTransportErrorsKeepTheContextError(t *testing.T) {
+	client, _ := newRPCStub(t, `{}`)
+
+	ctx, cancel := context.WithDeadline(t.Context(), time.Now().Add(-time.Second))
+	defer cancel()
+
+	_, err := client.GetServerInfo(ctx)
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+	assert.NotContains(t, err.Error(), "Post \"")
 }

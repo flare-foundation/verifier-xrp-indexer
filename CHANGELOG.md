@@ -14,6 +14,7 @@ and this project adheres to
 
 ### Changed
 
+- A node URL without a scheme or host is rejected when the client is constructed, before the database is opened, instead of at the first request.
 - **Breaking:** Go 1.26.8 is required (go directive, CI image and Docker builder). Earlier toolchains carry reachable stdlib vulnerabilities.
 - Unknown keys in the TOML configuration are logged as a warning at startup instead of silently ignored.
 - `IsNativePayment` is true only for XRP-to-XRP payments; payments with `SendMax` or a non-XRP `Amount` are no longer native.
@@ -33,6 +34,7 @@ and this project adheres to
 
 ### Security
 
+- Transport errors name the node by scheme and host only. `*url.Error` embedded the full request URL, and hosted XRPL providers put the API key in the path or query, so every retry, the startup node-info warning and the fatal exit line logged the credential.
 - The configuration file is no longer dumped to the debug log at startup, which exposed the database password.
 - `github.com/ethereum/go-ethereum` bumped from v1.14.12 to v1.17.5, closing GO-2025-3436, GO-2026-4314, GO-2026-4315 and GO-2026-4508.
 

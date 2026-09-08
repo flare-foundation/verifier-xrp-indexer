@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -21,6 +22,8 @@ const errCodeLedgerNotFound = "lgrNotFound"
 type xrpClient struct {
 	client *http.Client
 	url    string
+	// endpoint is scheme and host only: hosted providers put the API key in the path
+	endpoint string
 }
 
 // New creates a new XRP blockchain client from the given configuration.
@@ -29,9 +32,16 @@ func New(cfg *Config) (indexer.BlockchainClient[*Block, Transaction, struct{}], 
 		return nil, errors.New("url must be provided")
 	}
 
+	// url.Parse errors quote the URL, so they are not returned
+	u, err := url.Parse(cfg.URL)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return nil, errors.New("url must be absolute, with a scheme and host")
+	}
+
 	return &xrpClient{
-		client: newHTTPClient(),
-		url:    cfg.URL,
+		client:   newHTTPClient(),
+		url:      cfg.URL,
+		endpoint: u.Scheme + "://" + u.Host,
 	}, nil
 }
 
@@ -68,7 +78,13 @@ func (c *xrpClient) getResponse(ctx context.Context, request xrpRequest) ([]byte
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("send request: %w", err)
+		// *url.Error prints the full URL; its cause names at most host and port
+		var urlErr *url.Error
+		if errors.As(err, &urlErr) {
+			err = urlErr.Err
+		}
+
+		return nil, fmt.Errorf("send request to %s: %w", c.endpoint, err)
 	}
 
 	defer func() {
