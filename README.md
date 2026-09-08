@@ -28,7 +28,7 @@ To install the indexer, you need Go 1.26.8 or later.
 Now you may install the indexer by running the following command:
 
 ```shell
-go install github.com/flare-foundation/verifier-xrp-indexer/cmd/indexer@latest
+go install github.com/flare-foundation/verifier-xrp-indexer/v2/cmd/indexer@latest
 ```
 
 This will install the `indexer` command globally.
@@ -46,7 +46,7 @@ An example database is provided as docker image in `tests` directory which can b
 docker compose up postgresdb
 ```
 
-from the `tests` repository.
+from the `tests` directory.
 
 ##### Config file
 
@@ -63,23 +63,33 @@ history_drop = 3600 # delete all historic data in database older than this value
 history_drop_frequency = 600 # frequency of history drops, in seconds
 
 [indexer]
-confirmations = 1 # number of confirmed blocks before the data is included in the DB
+confirmations = 1 # number of confirmed blocks before the data is included in the DB; raise above the backend skew of load-balanced public endpoints, see below
 max_block_range = 100 # size of a batch to be repeatedly queried and saved in a dataset
 max_concurrency = 10 # number of concurrent processes querying data from the RPC node
 start_block_number = 780000
 
 [blockchain]
-url = "https://s.altnet.rippletest.net:51234"
+url = "https://s.altnet.rippletest.net:51234" # can be specified with env XRP_URL
 
 [timeout]
 request_timeout_millis = 3000 # timeout requests to the chain and the dataset
 backoff_max_elapsed_time_seconds = 300 # maximum time between retries
+
+[health]
+enabled = false # opt-in GET /health readiness endpoint, see below
+listen_address = ":8080"
 
 [logger]
 level = "DEBUG"
 file = "logs/xrp_indexer.log"
 console = true
 ```
+
+Unknown keys in the config file are logged as a warning at startup and ignored, so check the log after editing it.
+
+Public XRPL endpoints such as `xrplcluster.com` or the altnet cluster are load balanced.
+Their backends can disagree on the latest validated ledger, and a ledger that a lagging backend does not have yet is reported as not found, which the indexer treats as permanent and exits on.
+Keep `confirmations` above the expected skew when using such an endpoint; a dedicated node is not affected.
 
 ### Running the code
 
@@ -93,6 +103,20 @@ For example:
 ```bash
 go run cmd/indexer/main.go --config tests/config_test.toml
 ```
+
+### Health endpoint
+
+With `enabled = true` in the `[health]` section the indexer serves `GET /health` on `listen_address` (default `:8080`).
+It answers 200 while the indexed range is current and 503 with a JSON status (`initializing`, `chain_stale`, `catching_up`, `stalled` or `unavailable`) otherwise.
+`chain_stale` covers a node that has not been reached recently, including during the startup retries after a restart.
+Nothing listens unless it is enabled.
+
+The tolerated block lag, progress age and chain-poll age derive from `confirmations`, `max_block_range`, `max_concurrency` and `request_timeout_millis` when `max_block_lag`, `max_progress_age_seconds` and `max_chain_age_seconds` are left at zero.
+The effective values are echoed in every response.
+
+On Kubernetes use it for `readinessProbe` and `startupProbe` only.
+Do not add a `livenessProbe`: the indexer exits on persistent errors, so restart-on-exit already covers liveness, and a legitimate backfill answers 503 for its whole duration.
+The port is unauthenticated; restrict it with a network policy or bind `listen_address` to a specific interface.
 
 ### Running the tests
 

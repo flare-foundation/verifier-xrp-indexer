@@ -8,17 +8,21 @@ history_drop = 3600
 history_drop_frequency = 600
 
 [indexer]
-confirmations = 1
+confirmations = 1 # raise above the backend skew of load-balanced public endpoints, see README
 max_block_range = 100
 max_concurrency = 10
 start_block_number = 780000
 
 [blockchain]
-url = "https://s.altnet.rippletest.net:51234"
+url = "https://s.altnet.rippletest.net:51234" # can be specified with env XRP_URL
 
 [timeout]
 request_timeout_millis = 3000
 backoff_max_elapsed_time_seconds = 300
+
+[health]
+enabled = false # opt-in GET /health readiness endpoint, see README
+listen_address = ":8080"
 
 [logger]
 level = "DEBUG"

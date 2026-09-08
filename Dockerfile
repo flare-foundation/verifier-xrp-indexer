@@ -28,4 +28,7 @@ COPY --from=builder /build/PROJECT_COMMIT_HASH .
 # numeric UID so k8s runAsNonRoot can verify it
 USER 65532:65532
 
+# opt-in readiness endpoint ([health] enabled = true)
+EXPOSE 8080
+
 CMD ["./xrp-indexer"]
