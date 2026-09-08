@@ -13,14 +13,14 @@ var _ config.EnvOverrideable = new(Config)
 
 // Config holds the configuration for the XRP RPC client.
 type Config struct {
-	Url string `toml:"url"`
+	URL string `toml:"url"`
 }
 
 // ApplyEnvOverrides overrides config fields from environment variables.
-// XRP_URL overrides Url.
+// XRP_URL overrides URL.
 func (c *Config) ApplyEnvOverrides() error {
 	if url, ok := os.LookupEnv("XRP_URL"); ok {
-		c.Url = url
+		c.URL = url
 	}
 	return nil
 }

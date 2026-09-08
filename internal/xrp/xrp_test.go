@@ -40,7 +40,7 @@ func TestXrp(t *testing.T) {
 	t.Log("ledger_current_index:", currentLedgerIndex)
 	testLedger := currentLedgerIndex - 1
 
-	chainClient, err := xrp.New(&xrp.Config{Url: rpcURL})
+	chainClient, err := xrp.New(&xrp.Config{URL: rpcURL})
 	require.NoError(t, err)
 
 	t.Run("GetLatestBlockInfo", func(t *testing.T) {
@@ -94,7 +94,7 @@ func TestXrp(t *testing.T) {
 }
 
 func TestWrongURL(t *testing.T) {
-	chainClient, err := xrp.New(&xrp.Config{Url: "https://s.altnet.rippletest.net:512345"}) // wrong port
+	chainClient, err := xrp.New(&xrp.Config{URL: "https://s.altnet.rippletest.net:512345"}) // wrong port
 	require.NoError(t, err)
 
 	t.Run("GetLatestBlockInfo", func(t *testing.T) {
@@ -114,12 +114,12 @@ func TestWrongURL(t *testing.T) {
 }
 
 func TestEmptyUrl(t *testing.T) {
-	_, err := xrp.New(&xrp.Config{Url: ""})
+	_, err := xrp.New(&xrp.Config{URL: ""})
 	require.Error(t, err)
 }
 
 func TestGetServerInfo(t *testing.T) {
-	chainClient, err := xrp.New(&xrp.Config{Url: rpcURL})
+	chainClient, err := xrp.New(&xrp.Config{URL: rpcURL})
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)

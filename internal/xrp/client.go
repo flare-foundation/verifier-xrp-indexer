@@ -25,14 +25,29 @@ type xrpClient struct {
 
 // New creates a new XRP blockchain client from the given configuration.
 func New(cfg *Config) (indexer.BlockchainClient[*Block, Transaction, struct{}], error) {
-	if cfg.Url == "" {
+	if cfg.URL == "" {
 		return nil, errors.New("url must be provided")
 	}
 
 	return &xrpClient{
-		client: http.DefaultClient,
-		url:    cfg.Url,
+		client: newHTTPClient(),
+		url:    cfg.URL,
 	}, nil
+}
+
+// newHTTPClient keeps every idle connection to the node: the default two per
+// host make concurrent fetches re-handshake on each batch. Timeouts come from
+// the per-request context.
+func newHTTPClient() *http.Client {
+	transport, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		return http.DefaultClient
+	}
+
+	transport = transport.Clone()
+	transport.MaxIdleConnsPerHost = transport.MaxIdleConns
+
+	return &http.Client{Transport: transport}
 }
 
 // getResponse sends a JSON-RPC POST request to the node and returns the raw response body.
@@ -43,14 +58,13 @@ func (c *xrpClient) getResponse(ctx context.Context, request xrpRequest) ([]byte
 	}
 
 	buf := bytes.NewBuffer(getReq)
-	req, err := http.NewRequest(http.MethodPost, c.url, buf)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url, buf)
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
 
 	req.Header.Set("accept", "application/json")
 	req.Header.Set("content-type", "application/json")
-	req = req.WithContext(ctx)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -99,7 +113,9 @@ func (c *xrpClient) getLedgerResponse(ctx context.Context, params ledgerParams) 
 			respStruct.Result.Status, respStruct.Result.Error, respStruct.Result.ErrorMessage,
 		)
 
-		if respStruct.Result.Error == errCodeLedgerNotFound {
+		// permanent only for a numeric index; for "validated" it means the node
+		// has no validated ledger yet and must be retried
+		if respStruct.Result.Error == errCodeLedgerNotFound && params.byNumber() {
 			return nil, indexer.ErrBlockNotFound
 		}
 
@@ -154,7 +170,7 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 	}
 
 	if !respStruct.Result.Validated {
-		return nil, fmt.Errorf("block not validated in response: %+v", respStruct)
+		return nil, fmt.Errorf("ledger %d not validated yet", blockNum)
 	}
 
 	block := &Block{

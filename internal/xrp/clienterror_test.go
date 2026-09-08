@@ -28,7 +28,7 @@ func newRPCStub(t *testing.T, body string) (indexer.BlockchainClient[*Block, Tra
 	}))
 	t.Cleanup(server.Close)
 
-	client, err := New(&Config{Url: server.URL})
+	client, err := New(&Config{URL: server.URL})
 	require.NoError(t, err)
 
 	return client, &requests
@@ -174,4 +174,27 @@ func TestMalformedEnvelopeIsNotInvalidData(t *testing.T) {
 	_, err := client.GetBlockResult(t.Context(), 100)
 	require.Error(t, err)
 	require.NotErrorIs(t, err, indexer.ErrInvalidData)
+}
+
+func TestLatestLedgerNotFoundStaysTransient(t *testing.T) {
+	// a node without a validated ledger yet answers lgrNotFound for "validated";
+	// that must stay retryable rather than abort the indexer
+	client, _ := newRPCStub(t, `{"result":{"error":"lgrNotFound","error_code":21,"error_message":"ledgerNotFound","request":{"command":"ledger","ledger_index":"validated"},"status":"error"}}`)
+
+	_, err := client.GetLatestBlockInfo(t.Context())
+	require.NotErrorIs(t, err, indexer.ErrBlockNotFound)
+	require.ErrorContains(t, err, errCodeLedgerNotFound)
+}
+
+func TestNotValidatedLedgerIsTransientAndTerse(t *testing.T) {
+	const marker = "DEADBEEFRESPONSEBODY"
+	body := `{"result":{"status":"success","validated":false,"ledger_index":100,"ledger_hash":"AB","ledger":{"close_time":500,"transactions":[` +
+		`{"hash":"` + marker + `","TransactionType":"AccountSet","Account":"rS","metaData":{"TransactionResult":"tesSUCCESS","AffectedNodes":[]}}]}}}`
+	client, _ := newRPCStub(t, body)
+
+	_, err := client.GetBlockResult(t.Context(), 100)
+	require.Error(t, err)
+	require.NotErrorIs(t, err, indexer.ErrBlockNotFound)
+	require.NotErrorIs(t, err, indexer.ErrInvalidData)
+	require.NotContains(t, err.Error(), marker)
 }

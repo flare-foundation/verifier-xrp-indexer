@@ -1,6 +1,9 @@
 package xrp
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strconv"
+)
 
 // apiVersion is the rippled JSON-RPC API version pinned in every request so
 // behavior does not depend on the node's default. The response parsing relies
@@ -20,6 +23,13 @@ type ledgerParams struct {
 	Transactions bool   `json:"transactions"`
 	Expand       bool   `json:"expand"`
 	OwnerFunds   bool   `json:"owner_funds"`
+}
+
+// byNumber reports whether the request names a specific ledger index rather
+// than a shortcut such as "validated".
+func (p ledgerParams) byNumber() bool {
+	_, err := strconv.ParseUint(p.LedgerIndex, 10, 64)
+	return err == nil
 }
 
 type serverInfoParams struct {
