@@ -18,6 +18,7 @@ and this project adheres to
 - **Breaking:** Go 1.26.8 is required (go directive, CI image and Docker builder). Earlier toolchains carry reachable stdlib vulnerabilities.
 - The shipped configuration logs to the console at `INFO` without a file sink. The previous `DEBUG` plus file plus console wrote about 120 MB a day, three quarters of it repeated poll lines, and the file sink keeps every rotated file.
 - Quieter logs: the per-ledger "Processing ledger" debug line is gone (the framework reports each batch), and a response-body close failure is logged at debug instead of error.
+- A transaction the node returns in a form the indexer cannot parse aborts with an error naming its ledger. `ErrInvalidData` is permanent, so that one error is all an operator gets, and it identified only the position within an unnamed ledger while the process crashlooped on it.
 - Unknown keys in the TOML configuration are logged as a warning at startup instead of silently ignored.
 - `IsNativePayment` is true only for XRP-to-XRP payments; payments with `SendMax` or a non-XRP `Amount` are no longer native.
 - `IntendedReceivingAmount` is zero for non-native payments so they never pass the nonexistence amount filter: a sender can force such a payment to fail with a result code classified as receiver's fault, and a failed payment would count with its stated `Amount`. Column semantics: null = not a payment, zero = non-native payment, positive = intended drops of a native XRP payment.

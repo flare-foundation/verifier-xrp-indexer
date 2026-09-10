@@ -202,7 +202,7 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 		var tx transaction
 		err = json.Unmarshal([]byte(respStruct.Result.Ledger.Transactions[i]), &tx)
 		if err != nil {
-			return nil, fmt.Errorf("unmarshal transaction %d: %w: %w", i, err, indexer.ErrInvalidData)
+			return nil, fmt.Errorf("unmarshal transaction %d in ledger %d: %w: %w", i, blockNum, err, indexer.ErrInvalidData)
 		}
 
 		transactions[i] = Transaction{
@@ -222,13 +222,13 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 			transactions[i].PaymentReference = tx.paymentReference()
 			transactions[i].IsNativePayment, err = tx.isNativePayment()
 			if err != nil {
-				return nil, fmt.Errorf("isNativePayment for tx %s: %w: %w", tx.Hash, err, indexer.ErrInvalidData)
+				return nil, fmt.Errorf("isNativePayment for tx %s in ledger %d: %w: %w", tx.Hash, blockNum, err, indexer.ErrInvalidData)
 			}
 
 			if transactions[i].IsNativePayment {
 				transactions[i].IntendedReceivingAmount, err = tx.intendedReceivingAmount()
 				if err != nil {
-					return nil, fmt.Errorf("intended receiving amount for tx %s: %w: %w", tx.Hash, err, indexer.ErrInvalidData)
+					return nil, fmt.Errorf("intended receiving amount for tx %s in ledger %d: %w: %w", tx.Hash, blockNum, err, indexer.ErrInvalidData)
 				}
 			} else {
 				// zero keeps non-native payments out of the nonexistence amount
@@ -240,17 +240,17 @@ func (c *xrpClient) GetBlockResult(ctx context.Context, blockNum uint64) (*index
 
 		transactions[i].TransactionStatus, err = tx.transactionStatus()
 		if err != nil {
-			return nil, fmt.Errorf("transaction status for tx %s: %w: %w", tx.Hash, err, indexer.ErrInvalidData)
+			return nil, fmt.Errorf("transaction status for tx %s in ledger %d: %w: %w", tx.Hash, blockNum, err, indexer.ErrInvalidData)
 		}
 
 		transactions[i].SourceAddressesRoot, err = tx.sourceAddressesRoot()
 		if err != nil {
-			return nil, fmt.Errorf("source addresses root for tx %s: %w: %w", tx.Hash, err, indexer.ErrInvalidData)
+			return nil, fmt.Errorf("source addresses root for tx %s in ledger %d: %w: %w", tx.Hash, blockNum, err, indexer.ErrInvalidData)
 		}
 
 		transactions[i].FirstMemoDataHash, err = tx.firstMemoDataHash()
 		if err != nil {
-			return nil, fmt.Errorf("first memo hash for tx %s: %w: %w", tx.Hash, err, indexer.ErrInvalidData)
+			return nil, fmt.Errorf("first memo hash for tx %s in ledger %d: %w: %w", tx.Hash, blockNum, err, indexer.ErrInvalidData)
 		}
 	}
 
