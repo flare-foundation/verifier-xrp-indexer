@@ -86,6 +86,7 @@ console = true
 
 Unknown keys in the config file are logged as a warning at startup and ignored, so check the log after editing it.
 Logs go to the console at `INFO`, one line per indexed batch and per history drop, so the container runtime collects and rotates them.
+Raise the level to `DEBUG` when the indexer stops advancing: it adds the node's own status and error message for each failed ledger request, and a line each time the indexer catches up with the chain.
 A file sink (`file = "logs/xrp_indexer.log"`) is available, but its rotated files are never deleted, so use it only with external rotation.
 
 Public XRPL endpoints such as `xrplcluster.com` or the altnet cluster are load balanced.
