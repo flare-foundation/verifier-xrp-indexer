@@ -1,6 +1,6 @@
 # checkov:skip=CKV_DOCKER_2: Healthcheck is handled by the container orchestrator
 # build executable
-FROM golang:1.25.8-trixie@sha256:feb29f1d571353e52350efceeabc6a3f6769c249a97d53cbeececc2ec3f7c202 AS builder
+FROM golang:1.27.3-trixie@sha256:604106102d33b1084e37ca08adf98ac0813624ae8595bd0d7f3965ecebded09c AS builder
 
 WORKDIR /build
 

@@ -21,11 +21,12 @@ include:
   - component: gitlab.com/flarenetwork/ci-components-private/lint-shell@2
   - component: gitlab.com/flarenetwork/ci-components-private/lint-go@2
     inputs:
-      go_version: "1.25.8"
+      go_version: "1.27.3"
+      golangci_version: "v2.14.0"
       golangci_config_file: ".golangci.yml"
 
 variables:
-  GOLANG_VERSION: "1.25.8"
+  GOLANG_VERSION: "1.27.3"
   GOPATH: $CI_PROJECT_DIR/.go
   GOCACHE: $CI_PROJECT_DIR/.cache/go-cache
   COVERAGE_FILE: "coverage.out"

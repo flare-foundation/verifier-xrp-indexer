@@ -115,12 +115,12 @@ func TestIntendedReceivingAmount(t *testing.T) {
 		{
 			name:     "native XRP drops",
 			amount:   `"15000000"`,
-			expected: uint64Ptr(15000000),
+			expected: new(uint64(15000000)),
 		},
 		{
 			name:     "large native amount",
 			amount:   `"100000000000000000"`,
-			expected: uint64Ptr(100000000000000000),
+			expected: new(uint64(100000000000000000)),
 		},
 		{
 			name:     "token amount object",
@@ -328,11 +328,11 @@ func TestDestinationAddressHash(t *testing.T) {
 	}{
 		{
 			address:  "ryouhapPYV5KNHmFUKrjNqsjxhnxvQiVt",
-			expected: ptr("8f40c24f58fb0abfe1312837a2345d2294762ca46994acc99ff13ccba01fe1b2"),
+			expected: new("8f40c24f58fb0abfe1312837a2345d2294762ca46994acc99ff13ccba01fe1b2"),
 		},
 		{
 			address:  "r3iE6gLEVq6XXN8ddPWxffcYKJLxG2tC51",
-			expected: ptr("32ba9ed8519cb562a6f845df24258d3d093fab95c049ebe45a25662c226dfb43"),
+			expected: new("32ba9ed8519cb562a6f845df24258d3d093fab95c049ebe45a25662c226dfb43"),
 		},
 		{
 			address:  "",
@@ -344,12 +344,4 @@ func TestDestinationAddressHash(t *testing.T) {
 		tx := transaction{Destination: tt.address}
 		require.Equal(t, tt.expected, tx.destinationAddressHash())
 	}
-}
-
-func ptr(s string) *string {
-	return &s
-}
-
-func uint64Ptr(v uint64) *uint64 {
-	return &v
 }
