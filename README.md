@@ -23,7 +23,7 @@ The indexer is configured via a configuration file - see `config.example.toml` f
 
 ## Installation
 
-To install the indexer, you need to have Go installed to the latest version - currently 1.25.5.
+To install the indexer, you need to have Go installed to the latest version - currently 1.27.3.
 
 Now you may install the indexer by running the following command:
 

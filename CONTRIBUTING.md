@@ -36,7 +36,7 @@ The request must:
 
 ## Dev environment
 
-The indexer is implemented using Go - it is recommended to use version 1.25.5 or later.
+The indexer is implemented using Go - it is recommended to use version 1.27.3 or later.
 An RPC connection URL for XRPL and a Postgres database are required in order to run the main indexer.
 Public RPC nodes suitable for local development may be found on [public-servers](https://xrpl.org/docs/tutorials/public-servers) although using a private connection from a provider such as Quicknode or a self-hosted node is recommended for live deployments. Configuration should be provided via a `config.toml` file - you can copy `config.example.toml` and modify to connect to your specific RPC provider and database instance as well as set other parameters.
 

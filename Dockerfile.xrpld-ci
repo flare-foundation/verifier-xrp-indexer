@@ -10,6 +10,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl \
 CMD ["--standalone", "--start"]
 
 HEALTHCHECK --interval=1s --timeout=1s --retries=20 \
-  CMD curl -f http://localhost:5005 \
-    -H "Content-Type: application/json" \
-    -d '{"method":"server_info"}' || exit 1
+  CMD ["curl", "-f", "-H", "Content-Type: application/json", "-d", "{\"method\":\"server_info\"}", "http://localhost:5005"]
