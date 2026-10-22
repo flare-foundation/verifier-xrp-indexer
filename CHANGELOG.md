@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [[Unreleased]]
 
+## [2.1.1] - 2026-10-22
+
 ### Security
 
 - TLS connections reject certificates issued under the eight compromised eMudhra (emSign) intermediate CA keys, whichever root they chain to. The CA bundle in the image no longer contains the emSign ECC Root CA - G3 and Comodo AAA Services roots.
